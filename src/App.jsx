@@ -7,6 +7,7 @@ import { useMenu } from './hooks/useMenu';
 import { Home } from './pages/Home';
 import { OrderDetail } from './pages/OrderDetail';
 import { OrderHistory } from './pages/OrderHistory';
+import { AdminProducts } from './pages/AdminProducts';
 
 function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -35,6 +36,7 @@ function App() {
         />
         <Route path="/orders/:hash" element={<OrderDetail />} />
         <Route path="/history" element={<OrderHistory />} />
+        <Route path="/admin" element={<AdminProducts />} />
       </Routes>
 
       <footer className="bg-white border-t border-slate-200 py-12">

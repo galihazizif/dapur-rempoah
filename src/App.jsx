@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
-import { Hero } from './components/Hero';
-import { MenuSection } from './components/MenuSection';
 import { CartDrawer } from './components/CartDrawer';
 import { CheckoutModal } from './components/CheckoutModal';
 import { useMenu } from './hooks/useMenu';
+import { Home } from './pages/Home';
+import { OrderDetail } from './pages/OrderDetail';
+import { OrderHistory } from './pages/OrderHistory';
 
 function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -20,14 +22,20 @@ function App() {
     <div className="min-h-screen bg-slate-50">
       <Navbar onCartClick={() => setIsCartOpen(true)} />
 
-      <main>
-        <Hero />
-        <MenuSection
-          menu={menu}
-          loading={loading}
-          error={error}
+      <Routes>
+        <Route 
+          path="/" 
+          element={
+            <Home 
+              menu={menu} 
+              loading={loading} 
+              error={error} 
+            />
+          } 
         />
-      </main>
+        <Route path="/orders/:hash" element={<OrderDetail />} />
+        <Route path="/history" element={<OrderHistory />} />
+      </Routes>
 
       <footer className="bg-white border-t border-slate-200 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -43,7 +51,7 @@ function App() {
             <div>
               <h4 className="font-bold text-slate-900 mb-4">Navigasi</h4>
               <ul className="space-y-2 text-slate-500">
-                <li><a href="#menu" className="hover:text-violet-600 transition-colors">Menu</a></li>
+                <li><a href="/#menu" className="hover:text-violet-600 transition-colors">Menu</a></li>
                 <li><a href="#" className="hover:text-violet-600 transition-colors">Tentang Kami</a></li>
                 <li><a href="#" className="hover:text-violet-600 transition-colors">Promo</a></li>
               </ul>

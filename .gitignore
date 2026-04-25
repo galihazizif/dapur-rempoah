@@ -25,3 +25,5 @@ dist-ssr
 
 .env
 api-worker/wrangler.toml
+api-worker/.wrangler/cache/*
+api-worker/.wrangler/tmp/*

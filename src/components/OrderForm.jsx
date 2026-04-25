@@ -49,6 +49,15 @@ export const OrderForm = ({ onSuccess }) => {
       const result = await response.json();
       console.log('Order submitted:', result);
       
+      // Save to localStorage
+      const orderHistory = JSON.parse(localStorage.getItem('orderHistory') || '[]');
+      orderHistory.push({
+        hash: result.hash,
+        date: new Date().toISOString(),
+        total: result.total
+      });
+      localStorage.setItem('orderHistory', JSON.stringify(orderHistory));
+      
       setDone(true);
       setTimeout(() => {
         clearCart();

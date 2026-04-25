@@ -121,6 +121,8 @@ export default {
         
         // (Existing validation and D1 logic continues here)
         const orderId = `ORD-${Date.now()}`;
+        const orderHash = crypto.randomUUID().replace(/-/g, '').substring(0, 12);
+
         const statements = [];
         let calculatedTotal = 0;
         const verifiedItems = [];
@@ -156,9 +158,9 @@ export default {
         // Insert order summary
         statements.push(
           env.DB.prepare(`
-            INSERT INTO orders (id, customer_name, customer_phone, customer_address, total_amount)
-            VALUES (?, ?, ?, ?, ?)
-          `).bind(orderId, customer.name, customer.phone, customer.address, calculatedTotal)
+            INSERT INTO orders (id, hash, customer_name, customer_phone, customer_address, total_amount, status, payment_method, payment_status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).bind(orderId, orderHash, customer.name, customer.phone, customer.address, calculatedTotal, 'pending', 'qris', 'unpaid')
         );
 
         // Insert order items
@@ -176,13 +178,54 @@ export default {
 
         console.log("Verified order (Turnstile passed) saved to D1:", orderId, "Total:", calculatedTotal);
 
-        return new Response(JSON.stringify({ success: true, message: "Order placed successfully", orderId, total: calculatedTotal }), {
+        return new Response(JSON.stringify({ 
+          success: true, 
+          message: "Order placed successfully", 
+          orderId, 
+          hash: orderHash,
+          total: calculatedTotal 
+        }), {
           status: 201,
           headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type" },
         });
       } catch (error) {
         console.error("Order Validation/D1 Error:", error);
         return new Response(JSON.stringify({ success: false, message: error.message || "Failed to process order" }), {
+          status: 500,
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        });
+      }
+    }
+
+    if (url.pathname.startsWith("/orders/") && request.method === "GET") {
+      try {
+        const hash = url.pathname.split("/")[2];
+        if (!hash) {
+          throw new Error("Order hash is required");
+        }
+
+        // Get order details
+        const order = await env.DB.prepare(`
+          SELECT * FROM orders WHERE hash = ?
+        `).bind(hash).first();
+
+        if (!order) {
+          return new Response(JSON.stringify({ success: false, message: "Order not found" }), {
+            status: 404,
+            headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+          });
+        }
+
+        // Get order items
+        const { results: items } = await env.DB.prepare(`
+          SELECT * FROM order_items WHERE order_id = ?
+        `).bind(order.id).all();
+
+        return new Response(JSON.stringify({ success: true, order, items }), {
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        });
+      } catch (error) {
+        return new Response(JSON.stringify({ success: false, message: error.message }), {
           status: 500,
           headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
         });

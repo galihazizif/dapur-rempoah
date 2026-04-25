@@ -1,9 +1,13 @@
 CREATE TABLE IF NOT EXISTS orders (
   id TEXT PRIMARY KEY,
+  hash TEXT UNIQUE NOT NULL,
   customer_name TEXT NOT NULL,
   customer_phone TEXT NOT NULL,
   customer_address TEXT NOT NULL,
   total_amount INTEGER NOT NULL,
+  status TEXT DEFAULT 'pending',
+  payment_method TEXT DEFAULT 'qris',
+  payment_status TEXT DEFAULT 'unpaid',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

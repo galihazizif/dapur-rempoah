@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS payment_confirmations (
   status INTEGER DEFAULT 0, -- 1 processed, 0 unprocessed
   payment_date DATETIME NOT NULL,
   validity TEXT DEFAULT NULL, -- null, invalid, valid
+  image_url TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (order_id) REFERENCES orders(id)
 );

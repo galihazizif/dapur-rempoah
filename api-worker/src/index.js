@@ -323,21 +323,26 @@ export default {
     // Payment Confirmation endpoint
     if (url.pathname === "/payment-confirmations" && request.method === "POST") {
       try {
-        const body = await request.json();
-        const { order_reference, amount_paid, notes, payment_date, turnstileToken } = body;
+        const formData = await request.formData();
+        const order_reference = formData.get("order_reference");
+        const amount_paid = formData.get("amount_paid");
+        const notes = formData.get("notes") || '';
+        const payment_date = formData.get("payment_date");
+        const turnstileToken = formData.get("turnstileToken");
+        const image = formData.get("image");
 
         // Turnstile verification
         if (!turnstileToken) {
           return new Response(JSON.stringify({ success: false, message: "Missing bot protection token" }), { status: 400, headers: corsHeaders });
         }
-        const formData = new URLSearchParams();
-        formData.append("secret", env.TURNSTILE_SECRET_KEY);
-        formData.append("response", turnstileToken);
-        formData.append("remoteip", request.headers.get("CF-Connecting-IP") || "");
+        const verifyFormData = new URLSearchParams();
+        verifyFormData.append("secret", env.TURNSTILE_SECRET_KEY);
+        verifyFormData.append("response", turnstileToken);
+        verifyFormData.append("remoteip", request.headers.get("CF-Connecting-IP") || "");
 
         const verifyRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
           method: "POST",
-          body: formData,
+          body: verifyFormData,
         });
         const verifyResult = await verifyRes.json();
         if (!verifyResult.success) {
@@ -354,13 +359,27 @@ export default {
           return new Response(JSON.stringify({ success: false, message: "Order not found" }), { status: 404, headers: corsHeaders });
         }
 
+        // Handle Image Upload
+        let image_url = null;
+        if (image && typeof image !== 'string' && image.size > 0) {
+          if (image.size > 1024 * 1024) {
+            return new Response(JSON.stringify({ success: false, message: "Ukuran gambar maksimal 1MB" }), { status: 400, headers: corsHeaders });
+          }
+          
+          const filename = `proof-${crypto.randomUUID()}-${image.name}`;
+          await env.PAYMENT_PROOFS.put(filename, image.stream(), {
+            httpMetadata: { contentType: image.type }
+          });
+          image_url = `/payment-proofs/${filename}`;
+        }
+
         const id = crypto.randomUUID();
         await env.DB.prepare(`
-          INSERT INTO payment_confirmations (id, order_id, order_reference, amount_paid, notes, payment_date, status)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
-        `).bind(id, order.id, order_reference, amount_paid, notes || '', payment_date, 0).run();
+          INSERT INTO payment_confirmations (id, order_id, order_reference, amount_paid, notes, payment_date, status, image_url)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(id, order.id, order_reference, amount_paid, notes, payment_date, 0, image_url).run();
 
-        // Update order status to 'confirmation' (optional but good for UX)
+        // Update order status to 'confirmation'
         await env.DB.prepare("UPDATE orders SET payment_status = 'confirmation' WHERE id = ?").bind(order.id).run();
 
         // OneSignal Notification
@@ -388,8 +407,28 @@ export default {
           headers: corsHeaders
         });
       } catch (error) {
+        console.error("Payment Confirmation Error:", error);
         return new Response(JSON.stringify({ success: false, message: error.message }), { status: 500, headers: corsHeaders });
       }
+    }
+
+    // Serve payment proofs from R2
+    if (url.pathname.startsWith("/payment-proofs/") && request.method === "GET") {
+      const filename = url.pathname.split("/")[2];
+      const object = await env.PAYMENT_PROOFS.get(filename);
+
+      if (object === null) {
+        return new Response("Object Not Found", { status: 404 });
+      }
+
+      const headers = new Headers();
+      object.writeHttpMetadata(headers);
+      headers.set("etag", object.httpEtag);
+      headers.set("Access-Control-Allow-Origin", "*");
+
+      return new Response(object.body, {
+        headers,
+      });
     }
 
     // Admin Payment Confirmation List

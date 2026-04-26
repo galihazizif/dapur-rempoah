@@ -31,3 +31,16 @@ CREATE TABLE IF NOT EXISTS products (
   available BOOLEAN DEFAULT TRUE,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS payment_confirmations (
+  id TEXT PRIMARY KEY,
+  order_id TEXT NOT NULL,
+  order_reference TEXT NOT NULL,
+  amount_paid INTEGER NOT NULL,
+  notes TEXT,
+  status INTEGER DEFAULT 0, -- 1 processed, 0 unprocessed
+  payment_date DATETIME NOT NULL,
+  validity TEXT DEFAULT NULL, -- null, invalid, valid
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (order_id) REFERENCES orders(id)
+);

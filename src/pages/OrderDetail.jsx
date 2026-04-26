@@ -140,6 +140,28 @@ export function OrderDetail() {
             ))}
           </div>
 
+          {order.payment_status !== 'paid' && (
+            <div className="mt-8 p-6 bg-violet-50 rounded-2xl border border-violet-100">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-violet-600 shadow-sm border border-violet-100">
+                    <CreditCard size={20} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-900">Sudah melakukan pembayaran?</p>
+                    <p className="text-sm text-slate-500">Konfirmasi agar pesanan segera diproses.</p>
+                  </div>
+                </div>
+                <Link 
+                  to={`/confirm-payment/${hash}`}
+                  className="w-full sm:w-auto bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-md active:scale-95 text-center"
+                >
+                  Konfirmasi Sekarang
+                </Link>
+              </div>
+            </div>
+          )}
+
           <div className="mt-8 pt-8 border-t border-slate-100">
             <div className="flex items-center justify-between">
               <p className="text-lg font-bold text-slate-900">Total Pembayaran</p>

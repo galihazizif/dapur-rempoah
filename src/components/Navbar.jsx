@@ -12,11 +12,11 @@ export const Navbar = ({ onCartClick }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <Link to="/" className="text-2xl font-bold bg-gradient-to-r from-green-600 to-pink-600 bg-clip-text text-transparent">
+            <Link to="/" className="text-2xl font-bold text-green">
               Dapur Rempoah
             </Link>
           </div>
-          
+
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-4">
               <Link to="/" className="text-slate-700 hover:text-violet-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Menu</Link>
@@ -26,7 +26,7 @@ export const Navbar = ({ onCartClick }) => {
           </div>
 
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={onCartClick}
               className="relative p-2 text-slate-700 hover:text-violet-600 transition-colors"
             >
@@ -38,7 +38,7 @@ export const Navbar = ({ onCartClick }) => {
               )}
             </button>
             <div className="md:hidden">
-              <button 
+              <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="p-2 text-slate-700 hover:text-violet-600 transition-colors"
               >
@@ -52,22 +52,22 @@ export const Navbar = ({ onCartClick }) => {
       {/* Mobile Menu Content */}
       <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-64 border-t border-slate-100 bg-white' : 'max-h-0'}`}>
         <div className="px-4 pt-2 pb-6 space-y-2 shadow-inner">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             onClick={() => setIsMenuOpen(false)}
             className="block px-4 py-3 rounded-2xl text-slate-700 hover:bg-violet-50 hover:text-violet-600 font-medium transition-all"
           >
             Menu
           </Link>
-          <a 
-            href="#" 
+          <a
+            href="#"
             onClick={() => setIsMenuOpen(false)}
             className="block px-4 py-3 rounded-2xl text-slate-700 hover:bg-violet-50 hover:text-violet-600 font-medium transition-all"
           >
             Tentang Kami
           </a>
-          <Link 
-            to="/history" 
+          <Link
+            to="/history"
             onClick={() => setIsMenuOpen(false)}
             className="block px-4 py-3 rounded-2xl text-slate-700 hover:bg-violet-50 hover:text-violet-600 font-medium transition-all"
           >

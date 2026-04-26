@@ -8,6 +8,10 @@ import { Home } from './pages/Home';
 import { OrderDetail } from './pages/OrderDetail';
 import { OrderHistory } from './pages/OrderHistory';
 import { AdminProducts } from './pages/AdminProducts';
+import { PaymentConfirmation } from './pages/PaymentConfirmation';
+import { AdminPaymentConfirmations } from './pages/AdminPaymentConfirmations';
+import { AdminOrders } from './pages/AdminOrders';
+import { OneSignalSetup } from './components/OneSignalSetup';
 
 function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -21,6 +25,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <OneSignalSetup />
       <Navbar onCartClick={() => setIsCartOpen(true)} />
 
       <Routes>
@@ -35,8 +40,12 @@ function App() {
           } 
         />
         <Route path="/orders/:hash" element={<OrderDetail />} />
+        <Route path="/confirm-payment/:hash" element={<PaymentConfirmation />} />
+        <Route path="/confirm-payment" element={<PaymentConfirmation />} />
         <Route path="/history" element={<OrderHistory />} />
         <Route path="/admin" element={<AdminProducts />} />
+        <Route path="/admin/payments" element={<AdminPaymentConfirmations />} />
+        <Route path="/admin/orders" element={<AdminOrders />} />
       </Routes>
 
       <footer className="bg-white border-t border-slate-200 py-12">

@@ -30,7 +30,7 @@ export default {
         const { results } = await env.DB.prepare(`
           SELECT * FROM products WHERE available = 1
         `).all();
-        
+
         return new Response(JSON.stringify(results), {
           headers: {
             "Content-Type": "application/json",
@@ -52,7 +52,7 @@ export default {
         const { results } = await env.DB.prepare(`
           SELECT * FROM products ORDER BY created_at DESC
         `).all();
-        
+
         return new Response(JSON.stringify(results), {
           headers: {
             "Content-Type": "application/json",
@@ -73,12 +73,18 @@ export default {
       try {
         const orderData = await request.json();
         const { customer, items, turnstileToken } = orderData;
-        
+
+        const orderId = crypto.randomUUID();
+        const orderHash = Math.random().toString(36).substring(2, 12);
+        let calculatedTotal = 0;
+        const verifiedItems = [];
+        const statements = [];
+
         // 1. Verify Turnstile Token
         if (!turnstileToken) {
-          return new Response(JSON.stringify({ 
-            success: false, 
-            message: "Missing bot protection token" 
+          return new Response(JSON.stringify({
+            success: false,
+            message: "Missing bot protection token"
           }), { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
         }
 
@@ -95,8 +101,8 @@ export default {
         const verifyResult = await verifyRes.json();
         if (!verifyResult.success) {
           console.error("Turnstile verification failed:", verifyResult);
-          return new Response(JSON.stringify({ 
-            success: false, 
+          return new Response(JSON.stringify({
+            success: false,
             message: "Bot protection verification failed",
             errorDetails: verifyResult["error-codes"] // Return error codes for debugging
           }), { status: 403, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
@@ -111,15 +117,15 @@ export default {
         for (const item of items) {
           const menuProduct = dbProducts.find(p => p.id === item.id);
           if (!menuProduct) {
-            return new Response(JSON.stringify({ 
-              success: false, 
-              message: `Product with ID ${item.id} not found` 
+            return new Response(JSON.stringify({
+              success: false,
+              message: `Product with ID ${item.id} not found`
             }), { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
           }
           if (!menuProduct.available) {
-            return new Response(JSON.stringify({ 
-              success: false, 
-              message: `Product ${menuProduct.name} is currently unavailable` 
+            return new Response(JSON.stringify({
+              success: false,
+              message: `Product ${menuProduct.name} is currently unavailable`
             }), { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
           }
           const price = menuProduct.price;
@@ -158,12 +164,32 @@ export default {
 
         console.log("Verified order (Turnstile passed) saved to D1:", orderId, "Total:", calculatedTotal);
 
-        return new Response(JSON.stringify({ 
-          success: true, 
-          message: "Order placed successfully", 
-          orderId, 
+        // OneSignal Notification
+        try {
+          await fetch("https://onesignal.com/api/v1/notifications", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json; charset=utf-8",
+              "Authorization": `Basic ${env.ONESIGNAL_REST_API_KEY}`
+            },
+            body: JSON.stringify({
+              app_id: env.ONESIGNAL_APP_ID,
+              included_segments: ["Total Subscriptions"],
+              headings: { en: "Pesanan Baru!" },
+              contents: { en: `Ada pesanan baru dari ${customer.name} senilai Rp ${calculatedTotal.toLocaleString('id-ID')}` },
+              url: `https://dapurrempoah.com/admin/orders`
+            })
+          });
+        } catch (err) {
+          console.error("Failed to send OneSignal notification:", err);
+        }
+
+        return new Response(JSON.stringify({
+          success: true,
+          message: "Order placed successfully",
+          orderId,
           hash: orderHash,
-          total: calculatedTotal 
+          total: calculatedTotal
         }), {
           status: 201,
           headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type" },
@@ -215,9 +241,9 @@ export default {
     // Product Management Endpoints
     if (url.pathname === "/products" && request.method === "POST") {
       if (!checkAuth()) {
-        return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { 
-          status: 401, 
-          headers: corsHeaders 
+        return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), {
+          status: 401,
+          headers: corsHeaders
         });
       }
       try {
@@ -241,15 +267,15 @@ export default {
 
     if (url.pathname.startsWith("/products/") && request.method === "PUT") {
       if (!checkAuth()) {
-        return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { 
-          status: 401, 
-          headers: corsHeaders 
+        return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), {
+          status: 401,
+          headers: corsHeaders
         });
       }
       try {
         const id = url.pathname.split("/")[2];
         const { name, category, price, description, image_url, available } = await request.json();
-        
+
         await env.DB.prepare(`
           UPDATE products 
           SET name = COALESCE(?, name), 
@@ -274,9 +300,9 @@ export default {
 
     if (url.pathname.startsWith("/products/") && request.method === "DELETE") {
       if (!checkAuth()) {
-        return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { 
-          status: 401, 
-          headers: corsHeaders 
+        return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), {
+          status: 401,
+          headers: corsHeaders
         });
       }
       try {
@@ -294,7 +320,141 @@ export default {
       }
     }
 
-    return new Response("Not Found", { 
+    // Payment Confirmation endpoint
+    if (url.pathname === "/payment-confirmations" && request.method === "POST") {
+      try {
+        const body = await request.json();
+        const { order_reference, amount_paid, notes, payment_date, turnstileToken } = body;
+
+        // Turnstile verification
+        if (!turnstileToken) {
+          return new Response(JSON.stringify({ success: false, message: "Missing bot protection token" }), { status: 400, headers: corsHeaders });
+        }
+        const formData = new URLSearchParams();
+        formData.append("secret", env.TURNSTILE_SECRET_KEY);
+        formData.append("response", turnstileToken);
+        formData.append("remoteip", request.headers.get("CF-Connecting-IP") || "");
+
+        const verifyRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+          method: "POST",
+          body: formData,
+        });
+        const verifyResult = await verifyRes.json();
+        if (!verifyResult.success) {
+          return new Response(JSON.stringify({ success: false, message: "Bot protection verification failed" }), { status: 403, headers: corsHeaders });
+        }
+
+        // Find the order by reference
+        let order = await env.DB.prepare("SELECT id FROM orders WHERE id = ?").bind(order_reference).first();
+        if (!order) {
+          order = await env.DB.prepare("SELECT id FROM orders WHERE hash = ?").bind(order_reference).first();
+        }
+
+        if (!order) {
+          return new Response(JSON.stringify({ success: false, message: "Order not found" }), { status: 404, headers: corsHeaders });
+        }
+
+        const id = crypto.randomUUID();
+        await env.DB.prepare(`
+          INSERT INTO payment_confirmations (id, order_id, order_reference, amount_paid, notes, payment_date, status)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).bind(id, order.id, order_reference, amount_paid, notes || '', payment_date, 0).run();
+
+        // Update order status to 'confirmation' (optional but good for UX)
+        await env.DB.prepare("UPDATE orders SET payment_status = 'confirmation' WHERE id = ?").bind(order.id).run();
+
+        // OneSignal Notification
+        try {
+          await fetch("https://onesignal.com/api/v1/notifications", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json; charset=utf-8",
+              "Authorization": `Basic ${env.ONESIGNAL_REST_API_KEY}`
+            },
+            body: JSON.stringify({
+              app_id: env.ONESIGNAL_APP_ID,
+              included_segments: ["Total Subscriptions"],
+              headings: { en: "Konfirmasi Pembayaran!" },
+              contents: { en: `Ada konfirmasi pembayaran baru untuk pesanan ${order_reference}` },
+              url: `https://dapurrempoah.com/admin/payments`
+            })
+          });
+        } catch (err) {
+          console.error("Failed to send OneSignal notification:", err);
+        }
+
+        return new Response(JSON.stringify({ success: true, message: "Konfirmasi pembayaran berhasil dikirim", id }), {
+          status: 201,
+          headers: corsHeaders
+        });
+      } catch (error) {
+        return new Response(JSON.stringify({ success: false, message: error.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    // Admin Payment Confirmation List
+    if (url.pathname === "/admin/payment-confirmations" && request.method === "GET") {
+      if (!checkAuth()) return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      try {
+        const { results } = await env.DB.prepare("SELECT * FROM payment_confirmations ORDER BY created_at DESC").all();
+        return new Response(JSON.stringify(results), { headers: corsHeaders });
+      } catch (error) {
+        return new Response(JSON.stringify({ success: false, message: error.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    // Admin Payment Confirmation Update
+    if (url.pathname.startsWith("/admin/payment-confirmations/") && request.method === "PUT") {
+      if (!checkAuth()) return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      try {
+        const id = url.pathname.split("/")[3];
+        const { status, validity } = await request.json();
+
+        await env.DB.prepare(`
+          UPDATE payment_confirmations 
+          SET status = COALESCE(?, status), 
+              validity = COALESCE(?, validity)
+          WHERE id = ?
+        `).bind(status === undefined ? null : status, validity === undefined ? null : validity, id).run();
+
+        return new Response(JSON.stringify({ success: true, message: "Payment confirmation updated" }), { headers: corsHeaders });
+      } catch (error) {
+        return new Response(JSON.stringify({ success: false, message: error.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    // Admin Order List
+    if (url.pathname === "/admin/orders" && request.method === "GET") {
+      if (!checkAuth()) return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      try {
+        const { results } = await env.DB.prepare("SELECT * FROM orders ORDER BY created_at DESC").all();
+        return new Response(JSON.stringify(results), { headers: corsHeaders });
+      } catch (error) {
+        return new Response(JSON.stringify({ success: false, message: error.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    // Admin Order Update
+    if (url.pathname.startsWith("/admin/orders/") && request.method === "PUT") {
+      if (!checkAuth()) return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      try {
+        const id = url.pathname.split("/")[3];
+        const { status, payment_status } = await request.json();
+        
+        await env.DB.prepare(`
+          UPDATE orders 
+          SET status = COALESCE(?, status), 
+              payment_status = COALESCE(?, payment_status)
+          WHERE id = ?
+        `).bind(status === undefined ? null : status, payment_status === undefined ? null : payment_status, id).run();
+
+        return new Response(JSON.stringify({ success: true, message: "Order updated" }), { headers: corsHeaders });
+      } catch (error) {
+        return new Response(JSON.stringify({ success: false, message: error.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    return new Response("Not Found", {
       status: 404,
       headers: {
         "Access-Control-Allow-Origin": "*",

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, CheckCircle2, XCircle, ChevronLeft, Package, Search } from 'lucide-react';
+import { Plus, Edit2, Trash2, CheckCircle2, XCircle, ChevronLeft, Package, Search, CreditCard, ShoppingBag } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Link } from 'react-router-dom';
 
@@ -204,13 +204,29 @@ export function AdminProducts() {
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">Kelola Produk</h1>
           </div>
         </div>
-        <button 
-          onClick={() => handleOpenModal()}
-          className="bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-violet-200"
-        >
-          <Plus size={20} />
-          Tambah Produk
-        </button>
+        <div className="flex gap-3">
+          <Link 
+            to="/admin/orders"
+            className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-sm"
+          >
+            <ShoppingBag size={20} />
+            Pesanan
+          </Link>
+          <Link 
+            to="/admin/payments"
+            className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-sm"
+          >
+            <CreditCard size={20} />
+            Konfirmasi Pembayaran
+          </Link>
+          <button 
+            onClick={() => handleOpenModal()}
+            className="bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-violet-200"
+          >
+            <Plus size={20} />
+            Tambah Produk
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">

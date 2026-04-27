@@ -25,6 +25,26 @@ export default {
       return true;
     };
 
+    const sendTelegramMessage = async (text) => {
+      const token = env.TELEGRAM_BOT_TOKEN;
+      const chatId = env.TELEGRAM_CHAT_ID;
+      if (!token || !chatId) return;
+
+      try {
+        await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: text,
+            parse_mode: "HTML",
+          }),
+        });
+      } catch (err) {
+        console.error("Failed to send Telegram notification:", err);
+      }
+    };
+
     if (url.pathname === "/menu" && request.method === "GET") {
       try {
         const { results } = await env.DB.prepare(`
@@ -74,7 +94,16 @@ export default {
         const orderData = await request.json();
         const { customer, items, turnstileToken } = orderData;
 
-        const orderId = crypto.randomUUID();
+        const generateFriendlyId = (prefix, length = 6) => {
+          const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+          let randomPart = '';
+          for (let i = 0; i < length; i++) {
+            randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
+          }
+          return `${prefix}${randomPart}`;
+        };
+
+        const orderId = generateFriendlyId('ORD');
         const orderHash = Math.random().toString(36).substring(2, 12);
         let calculatedTotal = 0;
         const verifiedItems = [];
@@ -183,6 +212,17 @@ export default {
         // } catch (err) {
         //   console.error("Failed to send OneSignal notification:", err);
         // }
+
+        // Send Telegram Notification
+        ctx.waitUntil(sendTelegramMessage(
+          `<b>📦 Pesanan Baru!</b>\n\n` +
+          `🆔 ID: #${orderId}\n` +
+          `👤 Pelanggan: ${customer.name}\n` +
+          `📞 WhatsApp: ${customer.phone}\n` +
+          `📍 Alamat: ${customer.address}\n` +
+          `💰 Total: <b>Rp ${calculatedTotal.toLocaleString('id-ID')}</b>\n\n` +
+          `<a href="https://rempoah.my.id/admin/orders">Kelola Pesanan</a>`
+        ));
 
         return new Response(JSON.stringify({
           success: true,
@@ -373,7 +413,7 @@ export default {
           image_url = `/payment-proofs/${filename}`;
         }
 
-        const id = crypto.randomUUID();
+        const id = generateFriendlyId('PMT');
         await env.DB.prepare(`
           INSERT INTO payment_confirmations (id, order_id, order_reference, amount_paid, notes, payment_date, status, image_url)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -401,6 +441,16 @@ export default {
         // } catch (err) {
         //   console.error("Failed to send OneSignal notification:", err);
         // }
+
+        // Send Telegram Notification
+        ctx.waitUntil(sendTelegramMessage(
+          `<b>💸 Konfirmasi Pembayaran!</b>\n\n` +
+          `🆔 Referensi: #${order_reference}\n` +
+          `💰 Jumlah: <b>Rp ${parseInt(amount_paid).toLocaleString('id-ID')}</b>\n` +
+          `📝 Catatan: ${notes || '-'}\n` +
+          `📅 Tanggal: ${payment_date}\n\n` +
+          `<a href="https://dapurrempoah.com/admin/payments">Lihat Pembayaran</a>`
+        ));
 
         return new Response(JSON.stringify({ success: true, message: "Konfirmasi pembayaran berhasil dikirim", id }), {
           status: 201,

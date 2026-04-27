@@ -29,15 +29,15 @@ function App() {
       <Navbar onCartClick={() => setIsCartOpen(true)} />
 
       <Routes>
-        <Route 
-          path="/" 
+        <Route
+          path="/"
           element={
-            <Home 
-              menu={menu} 
-              loading={loading} 
-              error={error} 
+            <Home
+              menu={menu}
+              loading={loading}
+              error={error}
             />
-          } 
+          }
         />
         <Route path="/orders/:hash" element={<OrderDetail />} />
         <Route path="/confirm-payment/:hash" element={<PaymentConfirmation />} />
@@ -52,11 +52,11 @@ function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div>
-              <h3 className="text-xl font-bold bg-gradient-to-r from-violet-600 to-pink-600 bg-clip-text text-transparent mb-4">
+              <h3 className="text-xl font-bold text-black mb-4">
                 Dapur Rempoah
               </h3>
               <p className="text-slate-500">
-                Masakan Rumahan, serasa makan masakan Ibu.
+                Masakan Rumahan, obat kangen rumah.
               </p>
             </div>
             <div>
@@ -72,7 +72,7 @@ function App() {
               <ul className="space-y-2 text-slate-500">
                 <li>Babakan RT 09 / RW 02</li>
                 <li>Purbalingga, Jawa Tengah</li>
-                <li>WhatsApp: wa.me/628511705626</li>
+                <li>WhatsApp: <a href="https://wa.me/628511705626">628511705626</a></li>
               </ul>
             </div>
           </div>

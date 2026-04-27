@@ -17,8 +17,39 @@ export function PaymentConfirmation() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate size (1MB)
+    if (file.size > 1024 * 1024) {
+      setError('Ukuran gambar maksimal 1MB');
+      e.target.value = null;
+      return;
+    }
+
+    // Validate type
+    if (!file.type.startsWith('image/')) {
+      setError('File harus berupa gambar');
+      e.target.value = null;
+      return;
+    }
+
+    setError(null);
+    setSelectedImage(file);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,16 +62,20 @@ export function PaymentConfirmation() {
     setError(null);
 
     try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('order_reference', formData.order_reference);
+      formDataToSend.append('amount_paid', formData.amount_paid);
+      formDataToSend.append('notes', formData.notes);
+      formDataToSend.append('payment_date', formData.payment_date);
+      formDataToSend.append('turnstileToken', turnstileToken);
+      
+      if (selectedImage) {
+        formDataToSend.append('image', selectedImage);
+      }
+
       const response = await fetch(`${apiUrl}/payment-confirmations`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          amount_paid: parseInt(formData.amount_paid),
-          turnstileToken
-        }),
+        body: formDataToSend,
       });
 
       const data = await response.json();
@@ -145,6 +180,42 @@ export function PaymentConfirmation() {
                     value={formData.payment_date}
                     onChange={(e) => setFormData({...formData, payment_date: e.target.value})}
                   />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Unggah Bukti Pembayaran (Maks 1MB)</label>
+              <div className="space-y-4">
+                <div className="relative group">
+                  <input 
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                    id="payment-proof"
+                  />
+                  <label 
+                    htmlFor="payment-proof"
+                    className="flex flex-col items-center justify-center w-full min-h-[120px] px-6 py-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-violet-400 hover:bg-violet-50/30 transition-all group"
+                  >
+                    {imagePreview ? (
+                      <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-md">
+                        <img src={imagePreview} alt="Preview" className="w-full h-full object-contain" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                          <p className="text-white text-xs font-bold px-3 py-1.5 bg-violet-600 rounded-lg">Ganti Gambar</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400 group-hover:text-violet-500 group-hover:scale-110 transition-all mb-3 border border-slate-100">
+                          <CreditCard size={24} />
+                        </div>
+                        <p className="text-sm font-bold text-slate-600">Klik untuk pilih gambar</p>
+                        <p className="text-xs text-slate-400 mt-1">PNG, JPG atau JPEG (Maks. 1MB)</p>
+                      </>
+                    )}
+                  </label>
                 </div>
               </div>
             </div>

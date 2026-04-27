@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, CreditCard, CheckCircle2, XCircle, Search, Clock, Calendar, MessageSquare, AlertCircle, ShoppingBag, Package } from 'lucide-react';
+import { ChevronLeft, CreditCard, CheckCircle2, XCircle, Search, Clock, Calendar, MessageSquare, AlertCircle, ShoppingBag, Package, Eye } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Link } from 'react-router-dom';
 
@@ -170,6 +170,16 @@ export function AdminPaymentConfirmations() {
                       <p className="text-xs text-slate-500 flex items-center gap-1 mt-1">
                         <MessageSquare size={10} /> {conf.notes}
                       </p>
+                    )}
+                    {conf.image_url && (
+                      <a 
+                        href={`${apiUrl}${conf.image_url}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-violet-600 flex items-center gap-1 mt-2 font-black hover:text-violet-700 transition-colors bg-violet-50 px-2 py-1 rounded-md w-fit"
+                      >
+                        <Eye size={12} /> Lihat Bukti Bayar
+                      </a>
                     )}
                   </td>
                   <td className="px-6 py-4 font-black text-rose-600">Rp {conf.amount_paid.toLocaleString('id-ID')}</td>

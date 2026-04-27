@@ -165,24 +165,24 @@ export default {
         console.log("Verified order (Turnstile passed) saved to D1:", orderId, "Total:", calculatedTotal);
 
         // OneSignal Notification
-        try {
-          await fetch("https://onesignal.com/api/v1/notifications", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json; charset=utf-8",
-              "Authorization": `Basic ${env.ONESIGNAL_REST_API_KEY}`
-            },
-            body: JSON.stringify({
-              app_id: env.ONESIGNAL_APP_ID,
-              included_segments: ["Total Subscriptions"],
-              headings: { en: "Pesanan Baru!" },
-              contents: { en: `Ada pesanan baru dari ${customer.name} senilai Rp ${calculatedTotal.toLocaleString('id-ID')}` },
-              url: `https://dapurrempoah.com/admin/orders`
-            })
-          });
-        } catch (err) {
-          console.error("Failed to send OneSignal notification:", err);
-        }
+        // try {
+        //   await fetch("https://onesignal.com/api/v1/notifications", {
+        //     method: "POST",
+        //     headers: {
+        //       "Content-Type": "application/json; charset=utf-8",
+        //       "Authorization": `Basic ${env.ONESIGNAL_REST_API_KEY}`
+        //     },
+        //     body: JSON.stringify({
+        //       app_id: env.ONESIGNAL_APP_ID,
+        //       included_segments: ["Total Subscriptions"],
+        //       headings: { en: "Pesanan Baru!" },
+        //       contents: { en: `Ada pesanan baru dari ${customer.name} senilai Rp ${calculatedTotal.toLocaleString('id-ID')}` },
+        //       url: `https://dapurrempoah.com/admin/orders`
+        //     })
+        //   });
+        // } catch (err) {
+        //   console.error("Failed to send OneSignal notification:", err);
+        // }
 
         return new Response(JSON.stringify({
           success: true,
@@ -365,7 +365,7 @@ export default {
           if (image.size > 1024 * 1024) {
             return new Response(JSON.stringify({ success: false, message: "Ukuran gambar maksimal 1MB" }), { status: 400, headers: corsHeaders });
           }
-          
+
           const filename = `proof-${crypto.randomUUID()}-${image.name}`;
           await env.PAYMENT_PROOFS.put(filename, image.stream(), {
             httpMetadata: { contentType: image.type }
@@ -383,24 +383,24 @@ export default {
         await env.DB.prepare("UPDATE orders SET payment_status = 'confirmation' WHERE id = ?").bind(order.id).run();
 
         // OneSignal Notification
-        try {
-          await fetch("https://onesignal.com/api/v1/notifications", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json; charset=utf-8",
-              "Authorization": `Basic ${env.ONESIGNAL_REST_API_KEY}`
-            },
-            body: JSON.stringify({
-              app_id: env.ONESIGNAL_APP_ID,
-              included_segments: ["Total Subscriptions"],
-              headings: { en: "Konfirmasi Pembayaran!" },
-              contents: { en: `Ada konfirmasi pembayaran baru untuk pesanan ${order_reference}` },
-              url: `https://dapurrempoah.com/admin/payments`
-            })
-          });
-        } catch (err) {
-          console.error("Failed to send OneSignal notification:", err);
-        }
+        // try {
+        //   await fetch("https://onesignal.com/api/v1/notifications", {
+        //     method: "POST",
+        //     headers: {
+        //       "Content-Type": "application/json; charset=utf-8",
+        //       "Authorization": `Basic ${env.ONESIGNAL_REST_API_KEY}`
+        //     },
+        //     body: JSON.stringify({
+        //       app_id: env.ONESIGNAL_APP_ID,
+        //       included_segments: ["Total Subscriptions"],
+        //       headings: { en: "Konfirmasi Pembayaran!" },
+        //       contents: { en: `Ada konfirmasi pembayaran baru untuk pesanan ${order_reference}` },
+        //       url: `https://dapurrempoah.com/admin/payments`
+        //     })
+        //   });
+        // } catch (err) {
+        //   console.error("Failed to send OneSignal notification:", err);
+        // }
 
         return new Response(JSON.stringify({ success: true, message: "Konfirmasi pembayaran berhasil dikirim", id }), {
           status: 201,
@@ -479,7 +479,7 @@ export default {
       try {
         const id = url.pathname.split("/")[3];
         const { status, payment_status } = await request.json();
-        
+
         await env.DB.prepare(`
           UPDATE orders 
           SET status = COALESCE(?, status), 

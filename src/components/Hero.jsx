@@ -6,11 +6,10 @@ export const Hero = () => {
     <div className="relative overflow-hidden bg-white py-16 sm:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative z-10 lg:w-full lg:max-w-2xl">
-          <main className="mx-auto max-w-7xl px-4 sm:px-6 md:mt-16 lg:px-8 lg:mt-20">
+          <main className="mx-auto max-w-7xl px-4 sm:px-6 md:mt-16 lg:px-8 lg:pl-0 lg:mt-20 pb-20">
             <div className="sm:text-center lg:text-left">
               <h1 className="text-4xl tracking-tight font-extrabold text-slate-900 sm:text-5xl md:text-6xl">
-                <span className="block xl:inline">Masakan Rumahan</span>{' '}
-                <span className="block text-violet-600 xl:inline">Obat kangen rumah</span>
+                <span className="block xl:inline">Masakan <br></br> Rumahan</span>{' '}
               </h1>
               <p className="mt-3 text-base text-slate-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
                 Dapur Rempoah menghadirkan hidangan tradisional dengan sentuhan modern. Kami menggunakan bahan-bahan segar dan rempah pilihan untuk pengalaman kuliner yang tak terlupakan.

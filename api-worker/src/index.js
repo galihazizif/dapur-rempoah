@@ -45,6 +45,15 @@ export default {
       }
     };
 
+    const generateFriendlyId = (prefix, length = 6) => {
+      const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      let randomPart = '';
+      for (let i = 0; i < length; i++) {
+        randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return `${prefix}${randomPart}`;
+    };
+
     if (url.pathname === "/menu" && request.method === "GET") {
       try {
         const { results } = await env.DB.prepare(`
@@ -93,15 +102,6 @@ export default {
       try {
         const orderData = await request.json();
         const { customer, items, turnstileToken } = orderData;
-
-        const generateFriendlyId = (prefix, length = 6) => {
-          const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-          let randomPart = '';
-          for (let i = 0; i < length; i++) {
-            randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
-          }
-          return `${prefix}${randomPart}`;
-        };
 
         const orderId = generateFriendlyId('ORD');
         const orderHash = Math.random().toString(36).substring(2, 12);

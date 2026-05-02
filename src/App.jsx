@@ -12,6 +12,7 @@ import { PaymentConfirmation } from './pages/PaymentConfirmation';
 import { AdminPaymentConfirmations } from './pages/AdminPaymentConfirmations';
 import { AdminOrders } from './pages/AdminOrders';
 import { OneSignalSetup } from './components/OneSignalSetup';
+import waLogo from './assets/wa_icon.png';
 
 function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -72,7 +73,7 @@ function App() {
               <ul className="space-y-2 text-slate-500">
                 <li>Babakan RT 09 / RW 02</li>
                 <li>Purbalingga, Jawa Tengah</li>
-                <li>WhatsApp: <a href="https://wa.me/628511705626">628511705626</a></li>
+                <li><span className="flex items-center gap-2"><img src={waLogo} className="w-6 h-6" /> <a href="https://wa.me/6285117054626">6285117054626</a></span></li>
               </ul>
             </div>
           </div>

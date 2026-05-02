@@ -38,8 +38,8 @@ export const Hero = () => {
       </div>
       <div className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
         <img
-          className="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full"
-          src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1200&auto=format&fit=crop"
+          className="w-full"
+          src="/photo_2026-04-26_19-33-45.jpg"
           alt="Dapur Rempoah Food"
         />
       </div>

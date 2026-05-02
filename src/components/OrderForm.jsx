@@ -1,9 +1,11 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Send, Phone, User, MapPin, CheckCircle2 } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import { Turnstile } from '@marsidev/react-turnstile';
 
 export const OrderForm = ({ onSuccess }) => {
+  const navigate = useNavigate();
   const { items, getTotal, clearCart } = useCartStore();
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
@@ -62,6 +64,7 @@ export const OrderForm = ({ onSuccess }) => {
       setTimeout(() => {
         clearCart();
         onSuccess();
+        navigate(`/orders/${result.hash}`);
       }, 2000);
     } catch (err) {
       console.error('Error submitting order:', err);

@@ -185,7 +185,7 @@ export function AdminOrders() {
               ) : filteredOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4">
-                    <p className="font-bold text-slate-900 text-sm">#{order.id.slice(0, 8)}...</p>
+                    <p className="font-bold text-slate-900 text-sm">#{order.id}</p>
                     <p className="text-[10px] text-slate-400 font-medium flex items-center gap-1 mt-1">
                       <Calendar size={10} /> {new Date(order.created_at).toLocaleString('id-ID')}
                     </p>

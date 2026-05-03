@@ -11,13 +11,22 @@ import { AdminProducts } from './pages/AdminProducts';
 import { PaymentConfirmation } from './pages/PaymentConfirmation';
 import { AdminPaymentConfirmations } from './pages/AdminPaymentConfirmations';
 import { AdminOrders } from './pages/AdminOrders';
+import { AdminVouchers } from './pages/AdminVouchers';
+import { AdminSettings } from './pages/AdminSettings';
 import { OneSignalSetup } from './components/OneSignalSetup';
+import { useSettingsStore } from './store/useSettingsStore';
+import { useEffect } from 'react';
 import waLogo from './assets/wa_icon.png';
 
 function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const { menu, loading, error } = useMenu();
+  const { fetchSettings } = useSettingsStore();
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   const handleOpenCheckout = () => {
     setIsCartOpen(false);
@@ -47,6 +56,8 @@ function App() {
         <Route path="/admin" element={<AdminProducts />} />
         <Route path="/admin/payments" element={<AdminPaymentConfirmations />} />
         <Route path="/admin/orders" element={<AdminOrders />} />
+        <Route path="/admin/vouchers" element={<AdminVouchers />} />
+        <Route path="/admin/settings" element={<AdminSettings />} />
       </Routes>
 
       <footer className="bg-white border-t border-slate-200 py-12">

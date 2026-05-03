@@ -162,8 +162,20 @@ export function OrderDetail() {
             </div>
           )}
 
-          <div className="mt-8 pt-8 border-t border-slate-100">
-            <div className="flex items-center justify-between">
+          <div className="mt-8 pt-8 border-t border-slate-100 space-y-3">
+            {order.voucher_code && (
+              <div className="flex items-center justify-between text-slate-600">
+                <p>Subtotal</p>
+                <p>Rp {(order.total_amount + (order.discount_amount || 0)).toLocaleString('id-ID')}</p>
+              </div>
+            )}
+            {order.voucher_code && (
+              <div className="flex items-center justify-between text-emerald-600">
+                <p>Diskon Voucher ({order.voucher_code})</p>
+                <p>- Rp {(order.discount_amount || 0).toLocaleString('id-ID')}</p>
+              </div>
+            )}
+            <div className="flex items-center justify-between pt-2 border-t border-slate-50">
               <p className="text-lg font-bold text-slate-900">Total Pembayaran</p>
               <p className="text-2xl font-black text-rose-600">
                 Rp {order.total_amount.toLocaleString('id-ID')}

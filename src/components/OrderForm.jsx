@@ -18,6 +18,42 @@ export const OrderForm = ({ onSuccess }) => {
     address: ''
   });
 
+  const [voucherInput, setVoucherInput] = useState('');
+  const [appliedVoucher, setAppliedVoucher] = useState(null);
+  const [voucherError, setVoucherError] = useState(null);
+  const [validatingVoucher, setValidatingVoucher] = useState(false);
+
+  const handleApplyVoucher = async () => {
+    if (!voucherInput.trim()) return;
+    setValidatingVoucher(true);
+    setVoucherError(null);
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${apiUrl}/vouchers/${voucherInput.trim().toUpperCase()}`);
+      if (!res.ok) {
+        let msg = "Voucher tidak valid";
+        try {
+          const errData = await res.json();
+          if (errData.message) msg = errData.message;
+        } catch(e) {}
+        throw new Error(msg);
+      }
+      const data = await res.json();
+      setAppliedVoucher(data.voucher);
+    } catch (err) {
+      setVoucherError(err.message);
+      setAppliedVoucher(null);
+    } finally {
+      setValidatingVoucher(false);
+    }
+  };
+  
+  const handleRemoveVoucher = () => {
+    setAppliedVoucher(null);
+    setVoucherInput('');
+    setVoucherError(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -39,7 +75,8 @@ export const OrderForm = ({ onSuccess }) => {
         body: JSON.stringify({
           customer: formData,
           items: items,
-          turnstileToken: turnstileToken
+          turnstileToken: turnstileToken,
+          voucherCode: appliedVoucher ? appliedVoucher.code : undefined
         }),
       });
 
@@ -160,10 +197,58 @@ export const OrderForm = ({ onSuccess }) => {
         </div>
       )}
 
-      <div className="p-4 bg-violet-50 rounded-2xl border border-violet-100 mt-8">
+      {/* Voucher Section */}
+      <div className="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+        <label className="block text-sm font-semibold text-slate-700">Kode Promo / Voucher</label>
+        {!appliedVoucher ? (
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={voucherInput}
+              onChange={(e) => setVoucherInput(e.target.value)}
+              placeholder="Masukkan kode..."
+              className="flex-1 px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all uppercase"
+            />
+            <button
+              type="button"
+              onClick={handleApplyVoucher}
+              disabled={validatingVoucher || !voucherInput.trim()}
+              className="bg-slate-900 text-white px-4 py-2 rounded-xl font-bold disabled:opacity-50"
+            >
+              {validatingVoucher ? 'Cek..' : 'Gunakan'}
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 px-4 py-3 rounded-xl">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="text-emerald-500" size={18} />
+              <div>
+                <p className="text-sm font-bold text-emerald-700">{appliedVoucher.code}</p>
+                <p className="text-xs text-emerald-600">Diskon Rp {appliedVoucher.amount.toLocaleString('id-ID')}</p>
+              </div>
+            </div>
+            <button type="button" onClick={handleRemoveVoucher} className="text-rose-500 hover:text-rose-600 text-sm font-bold">Batal</button>
+          </div>
+        )}
+        {voucherError && <p className="text-xs text-rose-500 font-medium">{voucherError}</p>}
+      </div>
+
+      <div className="p-4 bg-violet-50 rounded-2xl border border-violet-100 mt-8 space-y-2">
+        {appliedVoucher && (
+          <div className="flex justify-between items-center text-slate-600 text-sm border-b border-violet-100/50 pb-2">
+            <span>Subtotal</span>
+            <span>Rp {getTotal().toLocaleString('id-ID')}</span>
+          </div>
+        )}
+        {appliedVoucher && (
+          <div className="flex justify-between items-center text-emerald-600 text-sm border-b border-violet-100/50 pb-2">
+            <span>Diskon Voucher</span>
+            <span>- Rp {appliedVoucher.amount.toLocaleString('id-ID')}</span>
+          </div>
+        )}
         <div className="flex justify-between items-center text-violet-900">
           <span className="font-semibold text-sm uppercase tracking-wider">Total Pesanan</span>
-          <span className="text-xl font-bold">Rp {getTotal().toLocaleString('id-ID')}</span>
+          <span className="text-xl font-bold">Rp {Math.max(0, getTotal() - (appliedVoucher?.amount || 0)).toLocaleString('id-ID')}</span>
         </div>
       </div>
 

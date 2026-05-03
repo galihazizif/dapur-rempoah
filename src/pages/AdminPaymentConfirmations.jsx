@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, CreditCard, CheckCircle2, XCircle, Search, Clock, Calendar, MessageSquare, AlertCircle, ShoppingBag, Package, Eye } from 'lucide-react';
+import { ChevronLeft, CreditCard, CheckCircle2, XCircle, Search, Clock, Calendar, MessageSquare, AlertCircle, ShoppingBag, Package, Eye, Ticket } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Link } from 'react-router-dom';
 
@@ -129,6 +129,13 @@ export function AdminPaymentConfirmations() {
           >
             <ShoppingBag size={20} />
             Pesanan
+          </Link>
+          <Link 
+            to="/admin/vouchers"
+            className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-sm"
+          >
+            <Ticket size={20} />
+            Voucher
           </Link>
         </div>
       </div>

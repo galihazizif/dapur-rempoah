@@ -1,17 +1,20 @@
 import React from 'react';
 import { Plus, Minus, ShoppingCart } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { cn } from '../lib/utils';
 
 export const MenuCard = ({ item }) => {
   const addItem = useCartStore((state) => state.addItem);
   const items = useCartStore((state) => state.items);
+  const storeStatus = useSettingsStore((state) => state.settings?.store_status);
   const cartItem = items.find((i) => i.id === item.id);
+  const isAvailable = item.available && storeStatus === 'open';
 
   return (
     <div className={cn(
       "group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100",
-      !item.available && "opacity-60 grayscale"
+      !isAvailable && "opacity-60 grayscale"
     )}>
       <div className="relative h-48 overflow-hidden">
         <img 
@@ -19,9 +22,11 @@ export const MenuCard = ({ item }) => {
           alt={item.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
-        {!item.available && (
+        {!isAvailable && (
           <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center">
-            <span className="text-white font-bold px-4 py-2 border-2 border-white rounded-full">Habis</span>
+            <span className="text-white font-bold px-4 py-2 border-2 border-white rounded-full">
+              {!item.available ? 'Habis' : 'Tutup'}
+            </span>
           </div>
         )}
         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold text-slate-900 shadow-sm">
@@ -43,11 +48,11 @@ export const MenuCard = ({ item }) => {
         </p>
         
         <button
-          disabled={!item.available}
+          disabled={!isAvailable}
           onClick={() => addItem(item)}
           className={cn(
             "w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold transition-all duration-200",
-            item.available 
+            isAvailable 
               ? "bg-slate-900 text-white hover:bg-violet-600 active:scale-95" 
               : "bg-slate-200 text-slate-400 cursor-not-allowed"
           )}

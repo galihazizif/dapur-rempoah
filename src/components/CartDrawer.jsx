@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { X, Trash2, Plus, Minus, ArrowRight, ShoppingBag } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { cn } from '../lib/utils';
 
 export const CartDrawer = ({ isOpen, onClose, onCheckout }) => {
   const { items, updateQuantity, removeItem, getTotal } = useCartStore();
+  const storeStatus = useSettingsStore((state) => state.settings?.store_status);
+  const isClosed = storeStatus === 'closed';
 
   return (
     <div className={cn(
@@ -106,9 +109,15 @@ export const CartDrawer = ({ isOpen, onClose, onCheckout }) => {
               </div>
               <button 
                 onClick={onCheckout}
-                className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-violet-600 transition-all active:scale-[0.98]"
+                disabled={isClosed}
+                className={cn(
+                  "w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all",
+                  isClosed
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  : "bg-slate-900 text-white hover:bg-violet-600 active:scale-[0.98]"
+                )}
               >
-                Lanjut ke Checkout
+                {isClosed ? 'Toko Tutup' : 'Lanjut ke Checkout'}
               </button>
             </div>
           )}

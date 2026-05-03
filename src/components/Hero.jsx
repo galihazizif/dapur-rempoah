@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
+import waLogo from '../assets/wa_icon.png';
 
 export const Hero = () => {
   return (
@@ -25,10 +26,10 @@ export const Hero = () => {
                 </div>
                 <div className="mt-3 sm:mt-0 sm:ml-3">
                   <a
-                    href="#"
+                    href="https://wa.me/6285117054626"
                     className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-violet-700 bg-violet-100 hover:bg-violet-200 md:py-4 md:text-lg md:px-10 transition-colors"
                   >
-                    Lihat Promo
+                    <img src={waLogo} className="w-6 h-6 mr-2" /> WhatsApp
                   </a>
                 </div>
               </div>

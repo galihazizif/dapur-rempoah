@@ -54,6 +54,123 @@ export default {
       return `${prefix}${randomPart}`;
     };
 
+    // Voucher API
+    if (url.pathname === "/admin/vouchers" && request.method === "GET") {
+      if (!checkAuth()) return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      try {
+        const { results } = await env.DB.prepare("SELECT * FROM vouchers ORDER BY created_at DESC").all();
+        return new Response(JSON.stringify(results), { headers: corsHeaders });
+      } catch (error) {
+        return new Response(JSON.stringify({ success: false, message: error.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    if (url.pathname === "/admin/vouchers" && request.method === "POST") {
+      if (!checkAuth()) return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      try {
+        const { code, amount, is_active } = await request.json();
+        if (!code || !amount) {
+          return new Response(JSON.stringify({ success: false, message: "Code and amount are required" }), { status: 400, headers: corsHeaders });
+        }
+        await env.DB.prepare(`
+          INSERT INTO vouchers (code, amount, is_active, is_used)
+          VALUES (?, ?, ?, ?)
+        `).bind(code.trim().toUpperCase(), amount, is_active !== undefined ? (is_active ? 1 : 0) : 1, 0).run();
+        
+        return new Response(JSON.stringify({ success: true, message: "Voucher created" }), { status: 201, headers: corsHeaders });
+      } catch (error) {
+        if (error.message.includes("UNIQUE constraint failed")) {
+          return new Response(JSON.stringify({ success: false, message: "Voucher code already exists" }), { status: 400, headers: corsHeaders });
+        }
+        return new Response(JSON.stringify({ success: false, message: error.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    if (url.pathname.startsWith("/admin/vouchers/") && request.method === "PUT") {
+      if (!checkAuth()) return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      try {
+        const code = url.pathname.split("/")[3];
+        const { amount, is_active, is_used } = await request.json();
+        
+        await env.DB.prepare(`
+          UPDATE vouchers 
+          SET amount = COALESCE(?, amount), 
+              is_active = COALESCE(?, is_active),
+              is_used = COALESCE(?, is_used)
+          WHERE code = ?
+        `).bind(
+          amount, 
+          is_active !== undefined ? (is_active ? 1 : 0) : null,
+          is_used !== undefined ? (is_used ? 1 : 0) : null,
+          code
+        ).run();
+
+        return new Response(JSON.stringify({ success: true, message: "Voucher updated" }), { headers: corsHeaders });
+      } catch (error) {
+        return new Response(JSON.stringify({ success: false, message: error.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    if (url.pathname.startsWith("/admin/vouchers/") && request.method === "DELETE") {
+      if (!checkAuth()) return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      try {
+        const code = url.pathname.split("/")[3];
+        await env.DB.prepare("DELETE FROM vouchers WHERE code = ?").bind(code).run();
+        return new Response(JSON.stringify({ success: true, message: "Voucher deleted" }), { headers: corsHeaders });
+      } catch (error) {
+        return new Response(JSON.stringify({ success: false, message: error.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    if (url.pathname.startsWith("/vouchers/") && request.method === "GET") {
+      try {
+        const code = url.pathname.split("/")[2];
+        const voucher = await env.DB.prepare("SELECT * FROM vouchers WHERE code = ?").bind(code).first();
+        if (!voucher) {
+           return new Response(JSON.stringify({ success: false, message: "Voucher tidak ditemukan" }), { status: 404, headers: corsHeaders });
+        }
+        if (!voucher.is_active) {
+           return new Response(JSON.stringify({ success: false, message: "Voucher sudah tidak aktif" }), { status: 400, headers: corsHeaders });
+        }
+        if (voucher.is_used) {
+           return new Response(JSON.stringify({ success: false, message: "Voucher sudah digunakan" }), { status: 400, headers: corsHeaders });
+        }
+        return new Response(JSON.stringify({ success: true, voucher }), { headers: corsHeaders });
+      } catch (error) {
+        return new Response(JSON.stringify({ success: false, message: error.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    // Settings API
+    if (url.pathname === "/settings" && request.method === "GET") {
+      try {
+        const { results } = await env.DB.prepare("SELECT * FROM settings").all();
+        const settings = {};
+        results.forEach(r => settings[r.key] = r.value);
+        return new Response(JSON.stringify(settings), { headers: corsHeaders });
+      } catch (error) {
+        return new Response(JSON.stringify({ success: false, message: error.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    if (url.pathname === "/admin/settings" && request.method === "PUT") {
+      if (!checkAuth()) return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      try {
+        const { store_status, store_message } = await request.json();
+        const statements = [];
+        if (store_status !== undefined) {
+          statements.push(env.DB.prepare("UPDATE settings SET value = ? WHERE key = 'store_status'").bind(store_status));
+        }
+        if (store_message !== undefined) {
+          statements.push(env.DB.prepare("UPDATE settings SET value = ? WHERE key = 'store_message'").bind(store_message));
+        }
+        if (statements.length > 0) await env.DB.batch(statements);
+        return new Response(JSON.stringify({ success: true, message: "Settings updated" }), { headers: corsHeaders });
+      } catch (error) {
+        return new Response(JSON.stringify({ success: false, message: error.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
     if (url.pathname === "/menu" && request.method === "GET") {
       try {
         const { results } = await env.DB.prepare(`
@@ -101,11 +218,13 @@ export default {
     if (url.pathname === "/orders" && request.method === "POST") {
       try {
         const orderData = await request.json();
-        const { customer, items, turnstileToken } = orderData;
+        const { customer, items, turnstileToken, voucherCode } = orderData;
 
         const orderId = generateFriendlyId('ORD');
         const orderHash = Math.random().toString(36).substring(2, 12);
         let calculatedTotal = 0;
+        let discountAmount = 0;
+        let appliedVoucher = null;
         const verifiedItems = [];
         const statements = [];
 
@@ -134,6 +253,15 @@ export default {
             success: false,
             message: "Bot protection verification failed",
             errorDetails: verifyResult["error-codes"] // Return error codes for debugging
+          }), { status: 403, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
+        }
+
+        // Check if store is open
+        const statusSetting = await env.DB.prepare("SELECT value FROM settings WHERE key = 'store_status'").first();
+        if (statusSetting && statusSetting.value !== 'open') {
+          return new Response(JSON.stringify({
+            success: false,
+            message: "Maaf, toko sedang tutup dan tidak menerima pesanan."
           }), { status: 403, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
         }
 
@@ -170,13 +298,37 @@ export default {
           });
         }
 
+        if (voucherCode) {
+          const voucher = await env.DB.prepare("SELECT * FROM vouchers WHERE code = ?").bind(voucherCode.trim().toUpperCase()).first();
+          if (!voucher) {
+            return new Response(JSON.stringify({ success: false, message: "Voucher tidak ditemukan" }), { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
+          }
+          if (!voucher.is_active) {
+            return new Response(JSON.stringify({ success: false, message: "Voucher sudah tidak aktif" }), { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
+          }
+          if (voucher.is_used) {
+            return new Response(JSON.stringify({ success: false, message: "Voucher sudah digunakan" }), { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
+          }
+          appliedVoucher = voucher;
+          discountAmount = voucher.amount;
+        }
+
+        calculatedTotal -= discountAmount;
+        if (calculatedTotal < 0) calculatedTotal = 0;
+
         // Insert order summary
         statements.push(
           env.DB.prepare(`
-            INSERT INTO orders (id, hash, customer_name, customer_phone, customer_address, total_amount, status, payment_method, payment_status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-          `).bind(orderId, orderHash, customer.name, customer.phone, customer.address, calculatedTotal, 'pending', 'qris', 'unpaid')
+            INSERT INTO orders (id, hash, customer_name, customer_phone, customer_address, total_amount, status, payment_method, payment_status, voucher_code, discount_amount)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).bind(orderId, orderHash, customer.name, customer.phone, customer.address, calculatedTotal, 'pending', 'qris', 'unpaid', voucherCode ? voucherCode.trim().toUpperCase() : null, discountAmount)
         );
+
+        if (appliedVoucher) {
+          statements.push(
+            env.DB.prepare("UPDATE vouchers SET is_used = 1 WHERE code = ?").bind(appliedVoucher.code)
+          );
+        }
 
         // Insert order items
         for (const item of verifiedItems) {

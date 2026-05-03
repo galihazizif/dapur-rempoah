@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, Package, Search, Clock, Calendar, CheckCircle2, XCircle, ShoppingBag, User, MapPin, Phone, CreditCard } from 'lucide-react';
+import { ChevronLeft, Package, Search, Clock, Calendar, CheckCircle2, XCircle, ShoppingBag, User, MapPin, Phone, CreditCard, Ticket } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Link } from 'react-router-dom';
 
@@ -150,6 +150,13 @@ export function AdminOrders() {
             <CreditCard size={20} />
             Konfirmasi Pembayaran
           </Link>
+          <Link 
+            to="/admin/vouchers"
+            className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-sm"
+          >
+            <Ticket size={20} />
+            Voucher
+          </Link>
         </div>
       </div>
 
@@ -203,7 +210,14 @@ export function AdminOrders() {
                       </p>
                     </div>
                   </td>
-                  <td className="px-6 py-4 font-black text-rose-600 text-sm">Rp {order.total_amount.toLocaleString('id-ID')}</td>
+                  <td className="px-6 py-4">
+                    <p className="font-black text-rose-600 text-sm">Rp {order.total_amount.toLocaleString('id-ID')}</p>
+                    {order.voucher_code && (
+                      <p className="text-[10px] text-violet-600 font-bold bg-violet-50 px-2 py-0.5 rounded-md inline-block mt-1">
+                        Voucher: {order.voucher_code}
+                      </p>
+                    )}
+                  </td>
                   <td className="px-6 py-4">
                     <select 
                       value={order.status}

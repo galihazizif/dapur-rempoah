@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, CheckCircle2, XCircle, ChevronLeft, Package, Search, CreditCard, ShoppingBag } from 'lucide-react';
+import { Plus, Edit2, Trash2, CheckCircle2, XCircle, ChevronLeft, Package, Search, CreditCard, ShoppingBag, Ticket } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Link } from 'react-router-dom';
 
@@ -218,6 +218,13 @@ export function AdminProducts() {
           >
             <CreditCard size={20} />
             Konfirmasi Pembayaran
+          </Link>
+          <Link 
+            to="/admin/vouchers"
+            className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-sm"
+          >
+            <Ticket size={20} />
+            Voucher
           </Link>
           <button 
             onClick={() => handleOpenModal()}

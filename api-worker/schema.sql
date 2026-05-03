@@ -8,8 +8,27 @@ CREATE TABLE IF NOT EXISTS orders (
   status TEXT DEFAULT 'pending',
   payment_method TEXT DEFAULT 'qris',
   payment_status TEXT DEFAULT 'unpaid',
+  voucher_code TEXT,
+  discount_amount INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS vouchers (
+  code TEXT PRIMARY KEY,
+  amount INTEGER NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  is_used BOOLEAN DEFAULT FALSE,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT OR IGNORE INTO settings (key, value) VALUES ('store_status', 'open');
+INSERT OR IGNORE INTO settings (key, value) VALUES ('store_message', 'Maaf, toko sedang libur. Silakan pesan dilain waktu.');
 
 CREATE TABLE IF NOT EXISTS order_items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

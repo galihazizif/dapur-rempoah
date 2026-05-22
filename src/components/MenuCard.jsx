@@ -11,6 +11,14 @@ export const MenuCard = ({ item }) => {
   const cartItem = items.find((i) => i.id === item.id);
   const isAvailable = item.available && storeStatus === 'open';
 
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+  
+  const getImageUrl = (url) => {
+    if (!url) return 'https://via.placeholder.com/400x300?text=Menu';
+    if (url.startsWith('http')) return url;
+    return `${apiUrl}${url}`;
+  };
+
   return (
     <div className={cn(
       "group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100",
@@ -18,7 +26,7 @@ export const MenuCard = ({ item }) => {
     )}>
       <div className="relative h-48 overflow-hidden">
         <img 
-          src={item.image_url} 
+          src={getImageUrl(item.image_url)} 
           alt={item.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />

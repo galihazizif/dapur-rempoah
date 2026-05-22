@@ -8,6 +8,10 @@ export function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterPayment, setFilterPayment] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [editingFees, setEditingFees] = useState(null);
   
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787';
@@ -70,10 +74,19 @@ export function AdminOrders() {
   };
 
   const filteredOrders = orders.filter(o => 
-    o.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (o.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     o.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    o.customer_phone.toLowerCase().includes(searchTerm.toLowerCase())
+    o.customer_phone.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (filterStatus === 'all' || o.status === filterStatus) &&
+    (filterPayment === 'all' || o.payment_status === filterPayment)
   );
+
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const currentOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus, filterPayment]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -167,15 +180,41 @@ export function AdminOrders() {
       </div>
 
       <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-        <div className="p-4 border-b border-slate-50 flex items-center gap-2 bg-slate-50/50">
-          <Search className="text-slate-400" size={20} />
-          <input 
-            type="text" 
-            placeholder="Cari ID, nama pelanggan, atau telepon..." 
-            className="bg-transparent border-none outline-none w-full font-medium text-slate-600"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="p-4 border-b border-slate-50 flex flex-col sm:flex-row items-center gap-4 bg-slate-50/50">
+          <div className="flex items-center gap-2 w-full sm:w-auto flex-1">
+            <Search className="text-slate-400" size={20} />
+            <input 
+              type="text" 
+              placeholder="Cari ID, nama pelanggan, atau telepon..." 
+              className="bg-transparent border-none outline-none w-full font-medium text-slate-600"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <select 
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="bg-white border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-violet-500 text-sm font-bold text-slate-700"
+            >
+              <option value="all">Semua Status</option>
+              <option value="pending">Pending</option>
+              <option value="pending payment">Pending Payment</option>
+              <option value="inprogress">Proses</option>
+              <option value="complete">Selesai</option>
+              <option value="cancelled">Batal</option>
+            </select>
+            <select 
+              value={filterPayment}
+              onChange={(e) => setFilterPayment(e.target.value)}
+              className="bg-white border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-violet-500 text-sm font-bold text-slate-700"
+            >
+              <option value="all">Semua Pembayaran</option>
+              <option value="unpaid">Belum Bayar</option>
+              <option value="confirmation">Konfirmasi</option>
+              <option value="paid">Terbayar</option>
+            </select>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -193,9 +232,9 @@ export function AdminOrders() {
             <tbody className="divide-y divide-slate-50">
               {loading ? (
                 <tr><td colSpan="6" className="px-6 py-12 text-center text-slate-400">Memuat...</td></tr>
-              ) : filteredOrders.length === 0 ? (
+              ) : currentOrders.length === 0 ? (
                 <tr><td colSpan="6" className="px-6 py-12 text-center text-slate-400">Tidak ada pesanan ditemukan.</td></tr>
-              ) : filteredOrders.map((order) => (
+              ) : currentOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4">
                     <p className="font-bold text-slate-900 text-sm">#{order.id}</p>
@@ -276,6 +315,33 @@ export function AdminOrders() {
             </tbody>
           </table>
         </div>
+        
+        {!loading && filteredOrders.length > 0 && (
+          <div className="p-4 border-t border-slate-50/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500 bg-slate-50/30">
+            <div>
+              Menampilkan <span className="font-bold text-slate-700">{Math.min((currentPage - 1) * itemsPerPage + 1, filteredOrders.length)}</span> hingga <span className="font-bold text-slate-700">{Math.min(currentPage * itemsPerPage, filteredOrders.length)}</span> dari <span className="font-bold text-slate-700">{filteredOrders.length}</span> pesanan
+            </div>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white font-semibold transition-all shadow-sm"
+              >
+                Sebelumnya
+              </button>
+              <div className="flex items-center px-4 font-bold text-slate-700">
+                Hal {currentPage} dari {totalPages || 1}
+              </div>
+              <button 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white font-semibold transition-all shadow-sm"
+              >
+                Selanjutnya
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {editingFees && (

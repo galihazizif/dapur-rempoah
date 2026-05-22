@@ -439,11 +439,36 @@ export default {
         });
       }
       try {
-        const { name, category, price, description, image_url, available } = await request.json();
+        let name, category, price, description, image_url, available;
+        const contentType = request.headers.get("content-type") || "";
+
+        if (contentType.includes("multipart/form-data")) {
+          const formData = await request.formData();
+          name = formData.get("name");
+          category = formData.get("category");
+          price = formData.get("price");
+          description = formData.get("description");
+          available = formData.get("available");
+          const image = formData.get("image");
+
+          if (image && typeof image !== 'string' && image.size > 0) {
+            const filename = `product-${crypto.randomUUID()}-${image.name}`;
+            await env.PRODUCT_IMAGES.put(filename, image.stream(), {
+              httpMetadata: { contentType: image.type }
+            });
+            image_url = `/product-images/${filename}`;
+          } else {
+            image_url = formData.get("image_url");
+          }
+        } else {
+          const body = await request.json();
+          ({ name, category, price, description, image_url, available } = body);
+        }
+
         const result = await env.DB.prepare(`
           INSERT INTO products (name, category, price, description, image_url, available)
           VALUES (?, ?, ?, ?, ?, ?)
-        `).bind(name, category, price, description || '', image_url || '', available === undefined ? 1 : (available ? 1 : 0)).run();
+        `).bind(name, category, price, description || '', image_url || '', available === undefined || available === null ? 1 : (available === true || available === 'true' ? 1 : 0)).run();
 
         return new Response(JSON.stringify({ success: true, message: "Product created", id: result.meta.last_row_id }), {
           status: 201,
@@ -466,7 +491,31 @@ export default {
       }
       try {
         const id = url.pathname.split("/")[2];
-        const { name, category, price, description, image_url, available } = await request.json();
+        let name, category, price, description, image_url, available;
+        const contentType = request.headers.get("content-type") || "";
+
+        if (contentType.includes("multipart/form-data")) {
+          const formData = await request.formData();
+          name = formData.get("name") || undefined;
+          category = formData.get("category") || undefined;
+          price = formData.get("price") ? parseInt(formData.get("price")) : undefined;
+          description = formData.get("description") || undefined;
+          available = formData.get("available");
+          const image = formData.get("image");
+
+          if (image && typeof image !== 'string' && image.size > 0) {
+            const filename = `product-${crypto.randomUUID()}-${image.name}`;
+            await env.PRODUCT_IMAGES.put(filename, image.stream(), {
+              httpMetadata: { contentType: image.type }
+            });
+            image_url = `/product-images/${filename}`;
+          } else {
+            image_url = formData.get("image_url") || undefined;
+          }
+        } else {
+          const body = await request.json();
+          ({ name, category, price, description, image_url, available } = body);
+        }
 
         await env.DB.prepare(`
           UPDATE products 
@@ -477,7 +526,7 @@ export default {
               image_url = COALESCE(?, image_url), 
               available = COALESCE(?, available)
           WHERE id = ?
-        `).bind(name, category, price, description, image_url, available === undefined ? null : (available ? 1 : 0), id).run();
+        `).bind(name, category, price, description, image_url, available === undefined || available === null ? null : (available === true || available === 'true' ? 1 : 0), id).run();
 
         return new Response(JSON.stringify({ success: true, message: "Product updated" }), {
           headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
@@ -627,6 +676,26 @@ export default {
       object.writeHttpMetadata(headers);
       headers.set("etag", object.httpEtag);
       headers.set("Access-Control-Allow-Origin", "*");
+
+      return new Response(object.body, {
+        headers,
+      });
+    }
+
+    // Serve product images from R2
+    if (url.pathname.startsWith("/product-images/") && request.method === "GET") {
+      const filename = url.pathname.split("/")[2];
+      const object = await env.PRODUCT_IMAGES.get(filename);
+
+      if (object === null) {
+        return new Response("Object Not Found", { status: 404 });
+      }
+
+      const headers = new Headers();
+      object.writeHttpMetadata(headers);
+      headers.set("etag", object.httpEtag);
+      headers.set("Access-Control-Allow-Origin", "*");
+      headers.set("Cache-Control", "public, max-age=31536000");
 
       return new Response(object.body, {
         headers,

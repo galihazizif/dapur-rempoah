@@ -10,6 +10,7 @@ export function AdminProducts() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     category: 'makanan',
@@ -106,6 +107,7 @@ export function AdminProducts() {
         image_url: product.image_url || '',
         available: product.available ? true : false
       });
+      setImageFile(null);
     } else {
       setEditingProduct(null);
       setFormData({
@@ -116,6 +118,7 @@ export function AdminProducts() {
         image_url: '',
         available: true
       });
+      setImageFile(null);
     }
     setIsModalOpen(true);
   };
@@ -126,17 +129,31 @@ export function AdminProducts() {
     const url = editingProduct ? `${apiUrl}/products/${editingProduct.id}` : `${apiUrl}/products`;
 
     try {
+      const payload = new FormData();
+      payload.append("name", formData.name);
+      payload.append("category", formData.category);
+      payload.append("price", formData.price.toString());
+      payload.append("description", formData.description);
+      payload.append("available", formData.available);
+      
+      if (imageFile) {
+        payload.append("image", imageFile);
+      } else if (formData.image_url) {
+        payload.append("image_url", formData.image_url);
+      }
+
       const response = await fetch(url, {
         method,
         headers: { 
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${adminToken}`
         },
-        body: JSON.stringify(formData)
+        body: payload
       });
       if (response.ok) {
         setIsModalOpen(false);
         fetchProducts();
+      } else {
+        alert('Gagal menyimpan produk: ' + await response.text());
       }
     } catch (err) {
       alert('Gagal menyimpan produk');
@@ -269,7 +286,7 @@ export function AdminProducts() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
                       <img 
-                        src={product.image_url || 'https://via.placeholder.com/100'} 
+                        src={product.image_url ? (product.image_url.startsWith('http') ? product.image_url : `${apiUrl}${product.image_url}`) : 'https://via.placeholder.com/100'} 
                         alt={product.name} 
                         className="w-12 h-12 rounded-xl object-cover border border-slate-100 shadow-sm"
                       />
@@ -378,14 +395,18 @@ export function AdminProducts() {
               </div>
 
               <div>
-                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">URL Gambar</label>
-                <input 
-                  type="text" 
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-violet-500 outline-none transition-all font-medium text-slate-700"
-                  placeholder="https://..."
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({...formData, image_url: e.target.value})}
-                />
+                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Gambar Produk</label>
+                <div className="flex items-center gap-4">
+                  {editingProduct && formData.image_url && !imageFile && (
+                    <img src={formData.image_url.startsWith('http') ? formData.image_url : `${apiUrl}${formData.image_url}`} alt="Current" className="w-12 h-12 rounded-xl object-cover border border-slate-200" />
+                  )}
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-violet-500 outline-none transition-all font-medium text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"
+                    onChange={(e) => setImageFile(e.target.files[0])}
+                  />
+                </div>
               </div>
 
               <div className="flex items-center gap-2 py-2">

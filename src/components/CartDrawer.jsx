@@ -9,6 +9,14 @@ export const CartDrawer = ({ isOpen, onClose, onCheckout }) => {
   const storeStatus = useSettingsStore((state) => state.settings?.store_status);
   const isClosed = storeStatus === 'closed';
 
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+
+  const getImageUrl = (url) => {
+    if (!url) return 'https://via.placeholder.com/100';
+    if (url.startsWith('http')) return url;
+    return `${apiUrl}${url}`;
+  };
+
   return (
     <div className={cn(
       "fixed inset-0 z-[100] transition-opacity duration-300",
@@ -62,7 +70,7 @@ export const CartDrawer = ({ isOpen, onClose, onCheckout }) => {
               items.map((item) => (
                 <div key={item.id} className="flex gap-4">
                   <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
-                    <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                    <img src={getImageUrl(item.image_url)} alt={item.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-bold text-slate-900 truncate">{item.name}</h4>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, Package, Clock, CreditCard, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, Package, Clock, CreditCard, CheckCircle2, MessageCircle } from 'lucide-react';
 import { clsx } from 'clsx';
 
 export function OrderDetail() {
@@ -53,10 +53,12 @@ export function OrderDetail() {
   }
 
   const { order, items } = orderData;
+  const itemsSubtotal = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending': return 'bg-amber-100 text-amber-700';
+      case 'pending payment': return 'bg-orange-100 text-orange-700';
       case 'inprogress': return 'bg-blue-100 text-blue-700';
       case 'complete': return 'bg-emerald-100 text-emerald-700';
       case 'cancelled': return 'bg-rose-100 text-rose-700';
@@ -140,7 +142,32 @@ export function OrderDetail() {
             ))}
           </div>
 
-          {order.payment_status !== 'paid' && (
+          {order.status === 'pending' && (
+            <div className="mt-8 p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-emerald-600 shadow-sm border border-emerald-100">
+                    <MessageCircle size={20} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-900">Hubungi Admin</p>
+                    <p className="text-sm text-slate-500">Tanya ketersediaan pesanan ke Admin via WhatsApp.</p>
+                  </div>
+                </div>
+                <a 
+                  href={`https://web.whatsapp.com/send/?phone=6285117054626&text=${encodeURIComponent(`Hi, order is created, please proceed ${window.location.href}`)}&type=phone_number&app_absent=0`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-md active:scale-95 text-center flex items-center justify-center gap-2"
+                >
+                  <MessageCircle size={18} />
+                  Kirim Pesan WA
+                </a>
+              </div>
+            </div>
+          )}
+
+          {order.status !== 'pending' && order.payment_status !== 'paid' && (
             <div className="mt-8 p-6 bg-violet-50 rounded-2xl border border-violet-100">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
@@ -163,16 +190,28 @@ export function OrderDetail() {
           )}
 
           <div className="mt-8 pt-8 border-t border-slate-100 space-y-3">
-            {order.voucher_code && (
-              <div className="flex items-center justify-between text-slate-600">
-                <p>Subtotal</p>
-                <p>Rp {(order.total_amount + (order.discount_amount || 0)).toLocaleString('id-ID')}</p>
+            {(order.voucher_code || order.shipping_fee > 0 || order.additional_fee > 0) && (
+              <div className="flex items-center justify-between text-slate-600 font-bold">
+                <p>Subtotal Pesanan</p>
+                <p>Rp {itemsSubtotal.toLocaleString('id-ID')}</p>
               </div>
             )}
             {order.voucher_code && (
-              <div className="flex items-center justify-between text-emerald-600">
+              <div className="flex items-center justify-between text-emerald-600 font-bold">
                 <p>Diskon Voucher ({order.voucher_code})</p>
                 <p>- Rp {(order.discount_amount || 0).toLocaleString('id-ID')}</p>
+              </div>
+            )}
+            {order.shipping_fee > 0 && (
+              <div className="flex items-center justify-between text-slate-600 font-bold">
+                <p>Ongkos Kirim</p>
+                <p>Rp {order.shipping_fee.toLocaleString('id-ID')}</p>
+              </div>
+            )}
+            {order.additional_fee > 0 && (
+              <div className="flex items-center justify-between text-slate-600 font-bold">
+                <p>Biaya Tambahan</p>
+                <p>Rp {order.additional_fee.toLocaleString('id-ID')}</p>
               </div>
             )}
             <div className="flex items-center justify-between pt-2 border-t border-slate-50">

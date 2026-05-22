@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS orders (
   payment_status TEXT DEFAULT 'unpaid',
   voucher_code TEXT,
   discount_amount INTEGER DEFAULT 0,
+  shipping_fee INTEGER DEFAULT 0,
+  additional_fee INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

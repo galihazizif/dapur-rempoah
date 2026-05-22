@@ -8,6 +8,7 @@ export function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [editingFees, setEditingFees] = useState(null);
   
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787';
   const [adminToken, setAdminToken] = useState(localStorage.getItem('admin_token') || '');
@@ -48,15 +49,19 @@ export function AdminOrders() {
     setShowLogin(false);
   };
 
-  const handleUpdateOrder = async (id, status, payment_status) => {
+  const handleUpdateOrder = async (id, status, payment_status, shipping_fee, additional_fee) => {
     try {
+      const body = { status, payment_status };
+      if (shipping_fee !== undefined) body.shipping_fee = shipping_fee;
+      if (additional_fee !== undefined) body.additional_fee = additional_fee;
+
       const response = await fetch(`${apiUrl}/admin/orders/${id}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${adminToken}`
         },
-        body: JSON.stringify({ status, payment_status })
+        body: JSON.stringify(body)
       });
       if (response.ok) fetchOrders();
     } catch (err) {
@@ -73,6 +78,7 @@ export function AdminOrders() {
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending': return 'bg-amber-100 text-amber-700 hover:bg-amber-200';
+      case 'pending payment': return 'bg-orange-100 text-orange-700 hover:bg-orange-200';
       case 'inprogress': return 'bg-blue-100 text-blue-700 hover:bg-blue-200';
       case 'complete': return 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200';
       case 'cancelled': return 'bg-rose-100 text-rose-700 hover:bg-rose-200';
@@ -228,6 +234,7 @@ export function AdminOrders() {
                       )}
                     >
                       <option value="pending">Pending</option>
+                      <option value="pending payment">Pending Payment</option>
                       <option value="inprogress">Proses</option>
                       <option value="complete">Selesai</option>
                       <option value="cancelled">Batal</option>
@@ -247,7 +254,7 @@ export function AdminOrders() {
                       <option value="paid">Terbayar</option>
                     </select>
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right flex flex-col gap-2 items-end justify-center h-full min-h-[5rem]">
                     <Link 
                       to={`/orders/${order.hash}`}
                       target="_blank"
@@ -255,6 +262,14 @@ export function AdminOrders() {
                     >
                       Detail
                     </Link>
+                    {(order.status === 'pending' || order.status === 'pending payment') && (
+                      <button
+                        onClick={() => setEditingFees({ id: order.id, shipping_fee: order.shipping_fee || 0, additional_fee: order.additional_fee || 0 })}
+                        className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-md hover:bg-orange-100 transition-colors border border-orange-100"
+                      >
+                        Sesuaikan Biaya
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -262,6 +277,63 @@ export function AdminOrders() {
           </table>
         </div>
       </div>
+
+      {editingFees && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-xl">
+            <h3 className="text-lg font-black text-slate-900 mb-4 flex items-center gap-2">
+              <Ticket className="text-violet-600" size={20} />
+              Sesuaikan Biaya Pesanan
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">Ongkos Kirim</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">Rp</span>
+                  <input 
+                    type="number" 
+                    value={editingFees.shipping_fee}
+                    onChange={e => setEditingFees({...editingFees, shipping_fee: e.target.value === '' ? '' : Number(e.target.value)})}
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none font-bold text-slate-700"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">Biaya Tambahan</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">Rp</span>
+                  <input 
+                    type="number" 
+                    value={editingFees.additional_fee}
+                    onChange={e => setEditingFees({...editingFees, additional_fee: e.target.value === '' ? '' : Number(e.target.value)})}
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none font-bold text-slate-700"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-8">
+              <button 
+                onClick={() => setEditingFees(null)}
+                className="flex-1 px-4 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-colors"
+              >
+                Batal
+              </button>
+              <button 
+                onClick={() => {
+                  const order = orders.find(o => o.id === editingFees.id);
+                  handleUpdateOrder(editingFees.id, order.status, order.payment_status, Number(editingFees.shipping_fee) || 0, Number(editingFees.additional_fee) || 0);
+                  setEditingFees(null);
+                }}
+                className="flex-1 px-4 py-3 bg-violet-600 text-white font-bold rounded-xl hover:bg-violet-700 transition-colors shadow-md"
+              >
+                Simpan Biaya
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

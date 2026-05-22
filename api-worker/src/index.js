@@ -680,14 +680,47 @@ export default {
       if (!checkAuth()) return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 401, headers: corsHeaders });
       try {
         const id = url.pathname.split("/")[3];
-        const { status, payment_status } = await request.json();
+        const { status, payment_status, shipping_fee, additional_fee } = await request.json();
 
-        await env.DB.prepare(`
-          UPDATE orders 
-          SET status = COALESCE(?, status), 
-              payment_status = COALESCE(?, payment_status)
-          WHERE id = ?
-        `).bind(status === undefined ? null : status, payment_status === undefined ? null : payment_status, id).run();
+        if (shipping_fee !== undefined || additional_fee !== undefined) {
+          const order = await env.DB.prepare("SELECT * FROM orders WHERE id = ?").bind(id).first();
+          if (!order) {
+            return new Response(JSON.stringify({ success: false, message: "Order not found" }), { status: 404, headers: corsHeaders });
+          }
+
+          const items = await env.DB.prepare("SELECT * FROM order_items WHERE order_id = ?").bind(id).all();
+          const itemsBaseTotal = items.results.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+          
+          const newShipping = shipping_fee !== undefined ? shipping_fee : (order.shipping_fee || 0);
+          const newAdditional = additional_fee !== undefined ? additional_fee : (order.additional_fee || 0);
+          
+          let calculatedTotal = itemsBaseTotal - (order.discount_amount || 0) + newShipping + newAdditional;
+          if (calculatedTotal < 0) calculatedTotal = 0;
+
+          await env.DB.prepare(`
+            UPDATE orders 
+            SET status = COALESCE(?, status), 
+                payment_status = COALESCE(?, payment_status),
+                shipping_fee = ?,
+                additional_fee = ?,
+                total_amount = ?
+            WHERE id = ?
+          `).bind(
+            status === undefined ? null : status, 
+            payment_status === undefined ? null : payment_status, 
+            newShipping, 
+            newAdditional, 
+            calculatedTotal, 
+            id
+          ).run();
+        } else {
+          await env.DB.prepare(`
+            UPDATE orders 
+            SET status = COALESCE(?, status), 
+                payment_status = COALESCE(?, payment_status)
+            WHERE id = ?
+          `).bind(status === undefined ? null : status, payment_status === undefined ? null : payment_status, id).run();
+        }
 
         return new Response(JSON.stringify({ success: true, message: "Order updated" }), { headers: corsHeaders });
       } catch (error) {

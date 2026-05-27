@@ -15,7 +15,7 @@ export const CheckoutModal = ({ isOpen, onClose }) => {
       />
       
       <div className={cn(
-        "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-3xl shadow-2xl transition-all duration-300 p-8",
+        "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl transition-all duration-300 p-8",
         isOpen ? "scale-100 translate-y-[-50%]" : "scale-95 translate-y-[-45%]"
       )}>
         <button 

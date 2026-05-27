@@ -35,7 +35,7 @@ export const OrderForm = ({ onSuccess }) => {
         try {
           const errData = await res.json();
           if (errData.message) msg = errData.message;
-        } catch(e) {}
+        } catch (e) { }
         throw new Error(msg);
       }
       const data = await res.json();
@@ -47,7 +47,7 @@ export const OrderForm = ({ onSuccess }) => {
       setValidatingVoucher(false);
     }
   };
-  
+
   const handleRemoveVoucher = () => {
     setAppliedVoucher(null);
     setVoucherInput('');
@@ -56,7 +56,7 @@ export const OrderForm = ({ onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!turnstileToken) {
       setError('Mohon selesaikan verifikasi keamanan.');
       return;
@@ -87,7 +87,7 @@ export const OrderForm = ({ onSuccess }) => {
 
       const result = await response.json();
       console.log('Order submitted:', result);
-      
+
       // Save to localStorage
       const orderHistory = JSON.parse(localStorage.getItem('orderHistory') || '[]');
       orderHistory.push({
@@ -96,7 +96,7 @@ export const OrderForm = ({ onSuccess }) => {
         total: result.total
       });
       localStorage.setItem('orderHistory', JSON.stringify(orderHistory));
-      
+
       setDone(true);
       setTimeout(() => {
         clearCart();
@@ -201,7 +201,7 @@ export const OrderForm = ({ onSuccess }) => {
       <div className="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
         <label className="block text-sm font-semibold text-slate-700">Kode Promo / Voucher</label>
         {!appliedVoucher ? (
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap md:flex-row">
             <input
               type="text"
               value={voucherInput}

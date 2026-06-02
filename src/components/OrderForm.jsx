@@ -4,6 +4,37 @@ import { Send, Phone, User, MapPin, CheckCircle2 } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import { Turnstile } from '@marsidev/react-turnstile';
 
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl: markerShadow,
+});
+
+function LocationMarker({ position, setPosition, onPositionSelected }) {
+  const map = useMapEvents({
+    click(e) {
+      setPosition(e.latlng);
+      map.flyTo(e.latlng, map.getZoom());
+      if (onPositionSelected) {
+        onPositionSelected(e.latlng);
+      }
+    },
+  });
+
+  return position === null ? null : (
+    <Marker position={position}></Marker>
+  );
+}
+
 export const OrderForm = ({ onSuccess }) => {
   const navigate = useNavigate();
   const { items, getTotal, clearCart } = useCartStore();
@@ -17,6 +48,28 @@ export const OrderForm = ({ onSuccess }) => {
     phone: '',
     address: ''
   });
+
+  const [mapPosition, setMapPosition] = useState(null);
+
+  const handlePositionSelected = (latlng) => {
+    setMapPosition(latlng);
+    const coordString = `(Koordinat Peta: ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)})`;
+
+    setFormData(prev => {
+      const currentAddress = prev.address || '';
+      if (currentAddress.includes('(Koordinat Peta:')) {
+        return {
+          ...prev,
+          address: currentAddress.replace(/\(Koordinat Peta: [-\d.]+, [-\d.]+\)/, coordString)
+        };
+      } else {
+        return {
+          ...prev,
+          address: currentAddress ? `${currentAddress}\n${coordString}` : coordString
+        };
+      }
+    });
+  };
 
   const [voucherInput, setVoucherInput] = useState('');
   const [appliedVoucher, setAppliedVoucher] = useState(null);
@@ -73,7 +126,11 @@ export const OrderForm = ({ onSuccess }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          customer: formData,
+          customer: {
+            ...formData,
+            latitude: mapPosition ? mapPosition.lat : null,
+            longitude: mapPosition ? mapPosition.lng : null
+          },
           items: items,
           turnstileToken: turnstileToken,
           voucherCode: appliedVoucher ? appliedVoucher.code : undefined
@@ -180,6 +237,33 @@ export const OrderForm = ({ onSuccess }) => {
               className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all resize-none"
             />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-1.5">Titik Lokasi Pengiriman (Opsional)</label>
+          <div className="h-64 w-full rounded-xl overflow-hidden border border-slate-200 relative z-0">
+            <MapContainer
+              center={[-7.394801, 109.344261]}
+              zoom={13}
+              scrollWheelZoom={true}
+              style={{ height: "100%", width: "100%", zIndex: 0 }}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <LocationMarker
+                position={mapPosition}
+                setPosition={setMapPosition}
+                onPositionSelected={handlePositionSelected}
+              />
+            </MapContainer>
+          </div>
+          {mapPosition && (
+            <p className="text-xs text-slate-500 mt-2">
+              Koordinat terpilih: {mapPosition.lat.toFixed(6)}, {mapPosition.lng.toFixed(6)}
+            </p>
+          )}
         </div>
       </div>
 

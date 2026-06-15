@@ -44,7 +44,7 @@ export const MenuCard = ({ item }) => {
       
       <div className="p-5">
         <div className="flex justify-between items-start mb-2">
-          <h3 className="text-lg font-bold text-slate-900 group-hover:text-violet-600 transition-colors">
+          <h3 className="text-lg font-bold text-slate-900 group-hover:text-lime-600 transition-colors">
             {item.name}
           </h3>
           <span className="text-xs font-medium px-2 py-1 bg-slate-100 text-slate-500 rounded-md uppercase tracking-wider">
@@ -61,7 +61,7 @@ export const MenuCard = ({ item }) => {
           className={cn(
             "w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold transition-all duration-200",
             isAvailable 
-              ? "bg-slate-900 text-white hover:bg-violet-600 active:scale-95" 
+              ? "bg-slate-900 text-white hover:bg-lime-600 active:scale-95" 
               : "bg-slate-200 text-slate-400 cursor-not-allowed"
           )}
         >

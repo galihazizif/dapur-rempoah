@@ -15,7 +15,7 @@ export function OrderHistory() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       <div className="flex items-center gap-3 mb-8">
-        <div className="w-12 h-12 rounded-2xl bg-violet-100 flex items-center justify-center text-violet-600">
+        <div className="w-12 h-12 rounded-2xl bg-lime-100 flex items-center justify-center text-lime-600">
           <History className="w-6 h-6" />
         </div>
         <div>
@@ -33,7 +33,7 @@ export function OrderHistory() {
           <p className="text-slate-500 mb-6">Anda belum pernah memesan apa pun sebelumnya.</p>
           <Link 
             to="/" 
-            className="inline-flex items-center px-6 py-3 rounded-full bg-violet-600 text-white font-bold hover:bg-violet-700 transition-all shadow-lg shadow-violet-200"
+            className="inline-flex items-center px-6 py-3 rounded-full bg-lime-600 text-white font-bold hover:bg-lime-700 transition-all shadow-lg shadow-lime-200"
           >
             Pesan Sekarang
           </Link>
@@ -44,7 +44,7 @@ export function OrderHistory() {
             <Link 
               key={order.hash || index} 
               to={`/orders/${order.hash}`}
-              className="block bg-white p-5 rounded-3xl border border-slate-100 hover:border-violet-200 hover:shadow-md transition-all group"
+              className="block bg-white p-5 rounded-3xl border border-slate-100 hover:border-lime-200 hover:shadow-md transition-all group"
             >
               <div className="flex items-center justify-between">
                 <div className="flex gap-4 items-center">
@@ -56,7 +56,7 @@ export function OrderHistory() {
                     <p className="text-slate-500 text-sm">{new Date(order.date).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} • Rp {order.total.toLocaleString('id-ID')}</p>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-violet-500 transition-colors" />
+                <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-lime-500 transition-colors" />
               </div>
             </Link>
           ))}

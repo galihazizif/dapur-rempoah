@@ -162,14 +162,14 @@ export function AdminVouchers() {
               <input 
                 required
                 type="password" 
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-violet-500 outline-none transition-all font-bold text-slate-900 text-center tracking-widest"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-bold text-slate-900 text-center tracking-widest"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             <button 
               type="submit"
-              className="w-full bg-violet-600 hover:bg-violet-700 text-white px-6 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-violet-200"
+              className="w-full bg-lime-600 hover:bg-lime-700 text-white px-6 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-lime-200"
             >
               Masuk
             </button>
@@ -187,7 +187,7 @@ export function AdminVouchers() {
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <Link to="/" className="text-sm text-slate-500 hover:text-violet-600 flex items-center gap-1">
+            <Link to="/" className="text-sm text-slate-500 hover:text-lime-600 flex items-center gap-1">
               <ChevronLeft size={16} /> Kembali
             </Link>
             <span className="w-1 h-1 rounded-full bg-slate-300"></span>
@@ -217,7 +217,7 @@ export function AdminVouchers() {
           </Link>
           <button 
             onClick={() => handleOpenModal()}
-            className="bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-violet-200"
+            className="bg-lime-600 hover:bg-lime-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-lime-200"
           >
             <Plus size={20} />
             Tambah Voucher
@@ -260,7 +260,7 @@ export function AdminVouchers() {
                       {v.code}
                     </div>
                   </td>
-                  <td className="px-6 py-4 font-black text-violet-600">Rp {v.amount.toLocaleString('id-ID')}</td>
+                  <td className="px-6 py-4 font-black text-lime-600">Rp {v.amount.toLocaleString('id-ID')}</td>
                   <td className="px-6 py-4">
                     <button 
                       onClick={() => handleToggleActive(v)}
@@ -326,7 +326,7 @@ export function AdminVouchers() {
                   required
                   disabled={editingVoucher !== null}
                   type="text" 
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-violet-500 outline-none transition-all font-bold text-slate-900 uppercase font-mono disabled:opacity-50"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-bold text-slate-900 uppercase font-mono disabled:opacity-50"
                   placeholder="Contoh: DISKON50"
                   value={formData.code}
                   onChange={(e) => setFormData({...formData, code: e.target.value.toUpperCase().trim()})}
@@ -339,7 +339,7 @@ export function AdminVouchers() {
                   required
                   type="number" 
                   min="0"
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-violet-500 outline-none transition-all font-bold text-slate-900"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-bold text-slate-900"
                   value={formData.amount}
                   onChange={(e) => setFormData({...formData, amount: parseInt(e.target.value) || 0})}
                 />
@@ -349,7 +349,7 @@ export function AdminVouchers() {
                 <input 
                   type="checkbox" 
                   id="vp_active"
-                  className="w-5 h-5 accent-violet-600 rounded"
+                  className="w-5 h-5 accent-lime-600 rounded"
                   checked={formData.is_active}
                   onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
                 />
@@ -361,7 +361,7 @@ export function AdminVouchers() {
                   <input 
                     type="checkbox" 
                     id="vp_used"
-                    className="w-5 h-5 accent-violet-600 rounded"
+                    className="w-5 h-5 accent-lime-600 rounded"
                     checked={formData.is_used}
                     onChange={(e) => setFormData({...formData, is_used: e.target.checked})}
                   />
@@ -379,7 +379,7 @@ export function AdminVouchers() {
                 </button>
                 <button 
                   type="submit"
-                  className="flex-[2] px-6 py-4 rounded-2xl font-bold bg-slate-900 text-white hover:bg-violet-600 transition-all shadow-lg shadow-slate-200"
+                  className="flex-[2] px-6 py-4 rounded-2xl font-bold bg-slate-900 text-white hover:bg-lime-600 transition-all shadow-lg shadow-slate-200"
                 >
                   Simpan
                 </button>

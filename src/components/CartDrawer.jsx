@@ -37,7 +37,7 @@ export const CartDrawer = ({ isOpen, onClose, onCheckout }) => {
           {/* Header */}
           <div className="p-6 border-b border-slate-100 flex justify-between items-center">
             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-              <ShoppingBag size={24} className="text-violet-600" />
+              <ShoppingBag size={24} className="text-lime-600" />
               Keranjang Belanja
             </h2>
             <button 
@@ -61,7 +61,7 @@ export const CartDrawer = ({ isOpen, onClose, onCheckout }) => {
                 </div>
                 <button 
                   onClick={onClose}
-                  className="px-6 py-2 bg-violet-600 text-white rounded-xl font-medium"
+                  className="px-6 py-2 bg-lime-600 text-white rounded-xl font-medium"
                 >
                   Mulai Pesan
                 </button>
@@ -74,7 +74,7 @@ export const CartDrawer = ({ isOpen, onClose, onCheckout }) => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-bold text-slate-900 truncate">{item.name}</h4>
-                    <p className="text-violet-600 font-semibold text-sm">
+                    <p className="text-lime-600 font-semibold text-sm">
                       Rp {item.price.toLocaleString('id-ID')}
                     </p>
                     <div className="flex items-center gap-3 mt-2">
@@ -122,7 +122,7 @@ export const CartDrawer = ({ isOpen, onClose, onCheckout }) => {
                   "w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all",
                   isClosed
                   ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                  : "bg-slate-900 text-white hover:bg-violet-600 active:scale-[0.98]"
+                  : "bg-slate-900 text-white hover:bg-lime-600 active:scale-[0.98]"
                 )}
               >
                 {isClosed ? 'Toko Tutup' : 'Lanjut ke Checkout'}

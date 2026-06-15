@@ -102,7 +102,7 @@ export function AdminOrders() {
   const getPaymentStatusColor = (status) => {
     switch (status) {
       case 'unpaid': return 'bg-amber-100 text-amber-700 hover:bg-amber-200';
-      case 'confirmation': return 'bg-violet-100 text-violet-700 hover:bg-violet-200';
+      case 'confirmation': return 'bg-lime-100 text-lime-700 hover:bg-lime-200';
       case 'paid': return 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200';
       default: return 'bg-slate-100 text-slate-700 hover:bg-slate-200';
     }
@@ -126,14 +126,14 @@ export function AdminOrders() {
               <input 
                 required
                 type="password" 
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-violet-500 outline-none transition-all font-bold text-slate-900 text-center"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-bold text-slate-900 text-center"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             <button 
               type="submit"
-              className="w-full bg-violet-600 hover:bg-violet-700 text-white px-6 py-4 rounded-2xl font-bold transition-all shadow-lg"
+              className="w-full bg-lime-600 hover:bg-lime-700 text-white px-6 py-4 rounded-2xl font-bold transition-all shadow-lg"
             >
               Masuk
             </button>
@@ -195,7 +195,7 @@ export function AdminOrders() {
             <select 
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="bg-white border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-violet-500 text-sm font-bold text-slate-700"
+              className="bg-white border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-lime-500 text-sm font-bold text-slate-700"
             >
               <option value="all">Semua Status</option>
               <option value="pending">Pending</option>
@@ -207,7 +207,7 @@ export function AdminOrders() {
             <select 
               value={filterPayment}
               onChange={(e) => setFilterPayment(e.target.value)}
-              className="bg-white border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-violet-500 text-sm font-bold text-slate-700"
+              className="bg-white border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-lime-500 text-sm font-bold text-slate-700"
             >
               <option value="all">Semua Pembayaran</option>
               <option value="unpaid">Belum Bayar</option>
@@ -258,7 +258,7 @@ export function AdminOrders() {
                   <td className="px-6 py-4">
                     <p className="font-black text-rose-600 text-sm">Rp {order.total_amount.toLocaleString('id-ID')}</p>
                     {order.voucher_code && (
-                      <p className="text-[10px] text-violet-600 font-bold bg-violet-50 px-2 py-0.5 rounded-md inline-block mt-1">
+                      <p className="text-[10px] text-lime-600 font-bold bg-lime-50 px-2 py-0.5 rounded-md inline-block mt-1">
                         Voucher: {order.voucher_code}
                       </p>
                     )}
@@ -297,7 +297,7 @@ export function AdminOrders() {
                     <Link 
                       to={`/orders/${order.hash}`}
                       target="_blank"
-                      className="text-xs font-bold text-violet-600 hover:underline"
+                      className="text-xs font-bold text-lime-600 hover:underline"
                     >
                       Detail
                     </Link>
@@ -348,7 +348,7 @@ export function AdminOrders() {
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-xl">
             <h3 className="text-lg font-black text-slate-900 mb-4 flex items-center gap-2">
-              <Ticket className="text-violet-600" size={20} />
+              <Ticket className="text-lime-600" size={20} />
               Sesuaikan Biaya Pesanan
             </h3>
             <div className="space-y-4">
@@ -360,7 +360,7 @@ export function AdminOrders() {
                     type="number" 
                     value={editingFees.shipping_fee}
                     onChange={e => setEditingFees({...editingFees, shipping_fee: e.target.value === '' ? '' : Number(e.target.value)})}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none font-bold text-slate-700"
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-lime-500 outline-none font-bold text-slate-700"
                     placeholder="0"
                   />
                 </div>
@@ -373,7 +373,7 @@ export function AdminOrders() {
                     type="number" 
                     value={editingFees.additional_fee}
                     onChange={e => setEditingFees({...editingFees, additional_fee: e.target.value === '' ? '' : Number(e.target.value)})}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none font-bold text-slate-700"
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-lime-500 outline-none font-bold text-slate-700"
                     placeholder="0"
                   />
                 </div>
@@ -392,7 +392,7 @@ export function AdminOrders() {
                   handleUpdateOrder(editingFees.id, order.status, order.payment_status, Number(editingFees.shipping_fee) || 0, Number(editingFees.additional_fee) || 0);
                   setEditingFees(null);
                 }}
-                className="flex-1 px-4 py-3 bg-violet-600 text-white font-bold rounded-xl hover:bg-violet-700 transition-colors shadow-md"
+                className="flex-1 px-4 py-3 bg-lime-600 text-white font-bold rounded-xl hover:bg-lime-700 transition-colors shadow-md"
               >
                 Simpan Biaya
               </button>

@@ -34,7 +34,7 @@ export function OrderDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-lime-600"></div>
       </div>
     );
   }
@@ -79,7 +79,7 @@ export function OrderDetail() {
     <div className="max-w-3xl mx-auto px-4 py-8">
       <Link 
         to="/history" 
-        className="inline-flex items-center text-slate-500 hover:text-violet-600 transition-colors mb-6 group"
+        className="inline-flex items-center text-slate-500 hover:text-lime-600 transition-colors mb-6 group"
       >
         <ChevronLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
         Riwayat Pesanan
@@ -168,10 +168,10 @@ export function OrderDetail() {
           )}
 
           {order.status !== 'pending' && order.payment_status !== 'paid' && (
-            <div className="mt-8 p-6 bg-violet-50 rounded-2xl border border-violet-100">
+            <div className="mt-8 p-6 bg-lime-50 rounded-2xl border border-lime-100">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-violet-600 shadow-sm border border-violet-100">
+                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-lime-600 shadow-sm border border-lime-100">
                     <CreditCard size={20} />
                   </div>
                   <div>
@@ -181,7 +181,7 @@ export function OrderDetail() {
                 </div>
                 <Link 
                   to={`/confirm-payment/${hash}`}
-                  className="w-full sm:w-auto bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-md active:scale-95 text-center"
+                  className="w-full sm:w-auto bg-lime-600 hover:bg-lime-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-md active:scale-95 text-center"
                 >
                   Konfirmasi Sekarang
                 </Link>

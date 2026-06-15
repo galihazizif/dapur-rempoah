@@ -202,7 +202,7 @@ export const OrderForm = ({ onSuccess }) => {
               value={formData.name}
               onChange={handleChange}
               placeholder="Contoh: Budi Santoso"
-              className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
+              className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none transition-all"
             />
           </div>
         </div>
@@ -218,7 +218,7 @@ export const OrderForm = ({ onSuccess }) => {
               value={formData.phone}
               onChange={handleChange}
               placeholder="Contoh: 08123456789"
-              className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
+              className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none transition-all"
             />
           </div>
         </div>
@@ -234,7 +234,7 @@ export const OrderForm = ({ onSuccess }) => {
               onChange={handleChange}
               rows="3"
               placeholder="Masukkan alamat lengkap pengiriman..."
-              className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all resize-none"
+              className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none transition-all resize-none"
             />
           </div>
         </div>
@@ -291,7 +291,7 @@ export const OrderForm = ({ onSuccess }) => {
               value={voucherInput}
               onChange={(e) => setVoucherInput(e.target.value)}
               placeholder="Masukkan kode..."
-              className="flex-1 px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all uppercase"
+              className="flex-1 px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none transition-all uppercase"
             />
             <button
               type="button"
@@ -317,20 +317,20 @@ export const OrderForm = ({ onSuccess }) => {
         {voucherError && <p className="text-xs text-rose-500 font-medium">{voucherError}</p>}
       </div>
 
-      <div className="p-4 bg-violet-50 rounded-2xl border border-violet-100 mt-8 space-y-2">
+      <div className="p-4 bg-lime-50 rounded-2xl border border-lime-100 mt-8 space-y-2">
         {appliedVoucher && (
-          <div className="flex justify-between items-center text-slate-600 text-sm border-b border-violet-100/50 pb-2">
+          <div className="flex justify-between items-center text-slate-600 text-sm border-b border-lime-100/50 pb-2">
             <span>Subtotal</span>
             <span>Rp {getTotal().toLocaleString('id-ID')}</span>
           </div>
         )}
         {appliedVoucher && (
-          <div className="flex justify-between items-center text-emerald-600 text-sm border-b border-violet-100/50 pb-2">
+          <div className="flex justify-between items-center text-emerald-600 text-sm border-b border-lime-100/50 pb-2">
             <span>Diskon Voucher</span>
             <span>- Rp {appliedVoucher.amount.toLocaleString('id-ID')}</span>
           </div>
         )}
-        <div className="flex justify-between items-center text-violet-900">
+        <div className="flex justify-between items-center text-lime-900">
           <span className="font-semibold text-sm uppercase tracking-wider">Total Pesanan</span>
           <span className="text-xl font-bold">Rp {Math.max(0, getTotal() - (appliedVoucher?.amount || 0)).toLocaleString('id-ID')}</span>
         </div>
@@ -339,7 +339,7 @@ export const OrderForm = ({ onSuccess }) => {
       <button
         disabled={loading}
         type="submit"
-        className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-violet-600 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+        className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-lime-600 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
       >
         {loading ? (
           <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />

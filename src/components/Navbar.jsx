@@ -19,16 +19,16 @@ export const Navbar = ({ onCartClick }) => {
 
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-4">
-              <Link to="/" className="text-slate-700 hover:text-violet-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Menu</Link>
-              <a href="#" className="text-slate-700 hover:text-violet-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Tentang Kami</a>
-              <Link to="/history" className="text-slate-700 hover:text-violet-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Riwayat</Link>
+              <Link to="/" className="text-slate-700 hover:text-lime-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Menu</Link>
+              <a href="#" className="text-slate-700 hover:text-lime-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Tentang Kami</a>
+              <Link to="/history" className="text-slate-700 hover:text-lime-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Riwayat</Link>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
             <button
               onClick={onCartClick}
-              className="relative p-2 text-slate-700 hover:text-violet-600 transition-colors"
+              className="relative p-2 text-slate-700 hover:text-lime-600 transition-colors"
             >
               <ShoppingCart size={24} />
               {itemCount > 0 && (
@@ -40,7 +40,7 @@ export const Navbar = ({ onCartClick }) => {
             <div className="md:hidden">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2 text-slate-700 hover:text-violet-600 transition-colors"
+                className="p-2 text-slate-700 hover:text-lime-600 transition-colors"
               >
                 {isMenuOpen ? <X size={24} /> : <MenuIcon size={24} />}
               </button>
@@ -55,21 +55,21 @@ export const Navbar = ({ onCartClick }) => {
           <Link
             to="/"
             onClick={() => setIsMenuOpen(false)}
-            className="block px-4 py-3 rounded-2xl text-slate-700 hover:bg-violet-50 hover:text-violet-600 font-medium transition-all"
+            className="block px-4 py-3 rounded-2xl text-slate-700 hover:bg-lime-50 hover:text-lime-600 font-medium transition-all"
           >
             Menu
           </Link>
           <a
             href="#"
             onClick={() => setIsMenuOpen(false)}
-            className="block px-4 py-3 rounded-2xl text-slate-700 hover:bg-violet-50 hover:text-violet-600 font-medium transition-all"
+            className="block px-4 py-3 rounded-2xl text-slate-700 hover:bg-lime-50 hover:text-lime-600 font-medium transition-all"
           >
             Tentang Kami
           </a>
           <Link
             to="/history"
             onClick={() => setIsMenuOpen(false)}
-            className="block px-4 py-3 rounded-2xl text-slate-700 hover:bg-violet-50 hover:text-violet-600 font-medium transition-all"
+            className="block px-4 py-3 rounded-2xl text-slate-700 hover:bg-lime-50 hover:text-lime-600 font-medium transition-all"
           >
             Riwayat Pesanan
           </Link>

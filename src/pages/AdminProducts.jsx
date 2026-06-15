@@ -183,14 +183,14 @@ export function AdminProducts() {
               <input 
                 required
                 type="password" 
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-violet-500 outline-none transition-all font-bold text-slate-900 text-center tracking-widest"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-bold text-slate-900 text-center tracking-widest"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             <button 
               type="submit"
-              className="w-full bg-violet-600 hover:bg-violet-700 text-white px-6 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-violet-200"
+              className="w-full bg-lime-600 hover:bg-lime-700 text-white px-6 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-lime-200"
             >
               Masuk
             </button>
@@ -208,7 +208,7 @@ export function AdminProducts() {
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <Link to="/" className="text-sm text-slate-500 hover:text-violet-600 flex items-center gap-1">
+            <Link to="/" className="text-sm text-slate-500 hover:text-lime-600 flex items-center gap-1">
               <ChevronLeft size={16} /> Kembali
             </Link>
             <span className="w-1 h-1 rounded-full bg-slate-300"></span>
@@ -245,7 +245,7 @@ export function AdminProducts() {
           </Link>
           <button 
             onClick={() => handleOpenModal()}
-            className="bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-violet-200"
+            className="bg-lime-600 hover:bg-lime-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-lime-200"
           >
             <Plus size={20} />
             Tambah Produk
@@ -353,7 +353,7 @@ export function AdminProducts() {
                   <input 
                     required
                     type="text" 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-violet-500 outline-none transition-all font-bold text-slate-900"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-bold text-slate-900"
                     placeholder="Contoh: Burger Rempoah"
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -362,7 +362,7 @@ export function AdminProducts() {
                 <div>
                   <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Kategori</label>
                   <select 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-violet-500 outline-none transition-all font-bold text-slate-900"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-bold text-slate-900"
                     value={formData.category}
                     onChange={(e) => setFormData({...formData, category: e.target.value})}
                   >
@@ -376,7 +376,7 @@ export function AdminProducts() {
                   <input 
                     required
                     type="number" 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-violet-500 outline-none transition-all font-bold text-slate-900"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-bold text-slate-900"
                     value={formData.price}
                     onChange={(e) => setFormData({...formData, price: parseInt(e.target.value)})}
                   />
@@ -386,7 +386,7 @@ export function AdminProducts() {
               <div>
                 <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Deskripsi</label>
                 <textarea 
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-violet-500 outline-none transition-all font-medium text-slate-700 resize-none"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-medium text-slate-700 resize-none"
                   rows="3"
                   placeholder="Ceritakan sedikit tentang produk ini..."
                   value={formData.description}
@@ -403,7 +403,7 @@ export function AdminProducts() {
                   <input 
                     type="file" 
                     accept="image/*"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-violet-500 outline-none transition-all font-medium text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-medium text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-lime-50 file:text-lime-700 hover:file:bg-lime-100"
                     onChange={(e) => setImageFile(e.target.files[0])}
                   />
                 </div>
@@ -413,7 +413,7 @@ export function AdminProducts() {
                 <input 
                   type="checkbox" 
                   id="available"
-                  className="w-5 h-5 accent-violet-600 rounded"
+                  className="w-5 h-5 accent-lime-600 rounded"
                   checked={formData.available}
                   onChange={(e) => setFormData({...formData, available: e.target.checked})}
                 />
@@ -430,7 +430,7 @@ export function AdminProducts() {
                 </button>
                 <button 
                   type="submit"
-                  className="flex-[2] px-6 py-4 rounded-2xl font-bold bg-slate-900 text-white hover:bg-violet-600 transition-all shadow-lg shadow-slate-200"
+                  className="flex-[2] px-6 py-4 rounded-2xl font-bold bg-slate-900 text-white hover:bg-lime-600 transition-all shadow-lg shadow-slate-200"
                 >
                   Simpan Produk
                 </button>

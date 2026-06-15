@@ -24,6 +24,7 @@ dist-ssr
 *.sw?
 
 .env
+src/data/menu.json
 api-worker/wrangler.toml
 api-worker/.wrangler/cache/*
 api-worker/.wrangler/tmp/*

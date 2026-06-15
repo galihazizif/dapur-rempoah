@@ -91,14 +91,14 @@ export function AdminSettings() {
               <input 
                 required
                 type="password" 
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-violet-500 outline-none transition-all font-bold text-slate-900 text-center tracking-widest"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-bold text-slate-900 text-center tracking-widest"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             <button 
               type="submit"
-              className="w-full bg-violet-600 hover:bg-violet-700 text-white px-6 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-violet-200"
+              className="w-full bg-lime-600 hover:bg-lime-700 text-white px-6 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-lime-200"
             >
               Masuk
             </button>
@@ -116,7 +116,7 @@ export function AdminSettings() {
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <Link to="/" className="text-sm text-slate-500 hover:text-violet-600 flex items-center gap-1">
+            <Link to="/" className="text-sm text-slate-500 hover:text-lime-600 flex items-center gap-1">
               <ChevronLeft size={16} /> Kembali
             </Link>
             <span className="w-1 h-1 rounded-full bg-slate-300"></span>
@@ -174,7 +174,7 @@ export function AdminSettings() {
                       value="open"
                       checked={storeStatus === 'open'}
                       onChange={(e) => setStoreStatus(e.target.value)}
-                      className="w-4 h-4 accent-violet-600"
+                      className="w-4 h-4 accent-lime-600"
                     />
                     <span className="font-semibold text-slate-900">Buka (Terima Pesanan)</span>
                  </label>
@@ -196,7 +196,7 @@ export function AdminSettings() {
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">Pesan Libur untuk Pelanggan</label>
                 <textarea 
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none transition-all font-medium text-slate-800 resize-none h-24"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-medium text-slate-800 resize-none h-24"
                   placeholder="Contoh: Maaf, toko sedang libur Idul Fitri hingga tanggal 15 April."
                   value={storeMessage}
                   onChange={(e) => setStoreMessage(e.target.value)}
@@ -208,7 +208,7 @@ export function AdminSettings() {
               <button 
                 disabled={saving}
                 type="submit"
-                className="w-full bg-violet-600 hover:bg-violet-700 text-white px-6 py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg disabled:opacity-50"
+                className="w-full bg-lime-600 hover:bg-lime-700 text-white px-6 py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg disabled:opacity-50"
               >
                 <Save size={20} />
                 {saving ? 'Menyimpan...' : 'Simpan Pengaturan'}

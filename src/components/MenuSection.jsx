@@ -29,7 +29,7 @@ export const MenuSection = ({ menu = [], loading, error }) => {
               onClick={() => setFilter(cat)}
               className={`px-6 py-2 rounded-full text-sm font-semibold capitalize transition-all duration-200 ${
                 filter === cat
-                  ? 'bg-violet-600 text-white shadow-lg shadow-violet-200'
+                  ? 'bg-lime-600 text-white shadow-lg shadow-lime-200'
                   : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
               }`}
             >
@@ -40,7 +40,7 @@ export const MenuSection = ({ menu = [], loading, error }) => {
 
         {loading ? (
           <div className="flex justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-lime-600"></div>
           </div>
         ) : error ? (
           <div className="text-center py-20">

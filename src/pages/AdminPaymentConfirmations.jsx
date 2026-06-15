@@ -87,14 +87,14 @@ export function AdminPaymentConfirmations() {
               <input 
                 required
                 type="password" 
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-violet-500 outline-none transition-all font-bold text-slate-900 text-center"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-bold text-slate-900 text-center"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             <button 
               type="submit"
-              className="w-full bg-violet-600 hover:bg-violet-700 text-white px-6 py-4 rounded-2xl font-bold transition-all shadow-lg"
+              className="w-full bg-lime-600 hover:bg-lime-700 text-white px-6 py-4 rounded-2xl font-bold transition-all shadow-lg"
             >
               Masuk
             </button>
@@ -183,7 +183,7 @@ export function AdminPaymentConfirmations() {
                         href={`${apiUrl}${conf.image_url}`} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-xs text-violet-600 flex items-center gap-1 mt-2 font-black hover:text-violet-700 transition-colors bg-violet-50 px-2 py-1 rounded-md w-fit"
+                        className="text-xs text-lime-600 flex items-center gap-1 mt-2 font-black hover:text-lime-700 transition-colors bg-lime-50 px-2 py-1 rounded-md w-fit"
                       >
                         <Eye size={12} /> Lihat Bukti Bayar
                       </a>

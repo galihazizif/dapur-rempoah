@@ -111,7 +111,7 @@ export function PaymentConfirmation() {
     <div className="max-w-xl mx-auto px-4 py-8">
       <Link 
         to={hash ? `/orders/${hash}` : '/'} 
-        className="inline-flex items-center text-slate-500 hover:text-violet-600 transition-colors mb-6 group"
+        className="inline-flex items-center text-slate-500 hover:text-lime-600 transition-colors mb-6 group"
       >
         <ChevronLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
         Kembali
@@ -120,7 +120,7 @@ export function PaymentConfirmation() {
       <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden overflow-hidden animate-in slide-in-from-bottom-4 duration-500">
         <div className="p-8 border-b border-slate-100 bg-slate-50/50">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center text-white">
+            <div className="w-10 h-10 rounded-xl bg-lime-600 flex items-center justify-center text-white">
               <CreditCard size={20} />
             </div>
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">Konfirmasi Pembayaran</h1>
@@ -145,7 +145,7 @@ export function PaymentConfirmation() {
                   readOnly={!!hash}
                   type="text" 
                   className={clsx(
-                    "w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-violet-500 outline-none transition-all font-bold text-slate-900 placeholder:text-slate-300",
+                    "w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-bold text-slate-900 placeholder:text-slate-300",
                     hash && "bg-slate-100 cursor-not-allowed opacity-75"
                   )}
                   placeholder="Contoh: ord-123-abc"
@@ -162,7 +162,7 @@ export function PaymentConfirmation() {
                   <input 
                     required
                     type="number" 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-violet-500 outline-none transition-all font-bold text-slate-900"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-bold text-slate-900"
                     placeholder="Contoh: 50000"
                     value={formData.amount_paid}
                     onChange={(e) => setFormData({...formData, amount_paid: e.target.value})}
@@ -176,7 +176,7 @@ export function PaymentConfirmation() {
                   <input 
                     required
                     type="date" 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-violet-500 outline-none transition-all font-bold text-slate-900"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-bold text-slate-900"
                     value={formData.payment_date}
                     onChange={(e) => setFormData({...formData, payment_date: e.target.value})}
                   />
@@ -197,18 +197,18 @@ export function PaymentConfirmation() {
                   />
                   <label 
                     htmlFor="payment-proof"
-                    className="flex flex-col items-center justify-center w-full min-h-[120px] px-6 py-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-violet-400 hover:bg-violet-50/30 transition-all group"
+                    className="flex flex-col items-center justify-center w-full min-h-[120px] px-6 py-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-lime-400 hover:bg-lime-50/30 transition-all group"
                   >
                     {imagePreview ? (
                       <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-md">
                         <img src={imagePreview} alt="Preview" className="w-full h-full object-contain" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                          <p className="text-white text-xs font-bold px-3 py-1.5 bg-violet-600 rounded-lg">Ganti Gambar</p>
+                          <p className="text-white text-xs font-bold px-3 py-1.5 bg-lime-600 rounded-lg">Ganti Gambar</p>
                         </div>
                       </div>
                     ) : (
                       <>
-                        <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400 group-hover:text-violet-500 group-hover:scale-110 transition-all mb-3 border border-slate-100">
+                        <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400 group-hover:text-lime-500 group-hover:scale-110 transition-all mb-3 border border-slate-100">
                           <CreditCard size={24} />
                         </div>
                         <p className="text-sm font-bold text-slate-600">Klik untuk pilih gambar</p>
@@ -225,7 +225,7 @@ export function PaymentConfirmation() {
               <div className="relative">
                 <MessageSquare className="absolute right-4 top-4 text-slate-400" size={18} />
                 <textarea 
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-violet-500 outline-none transition-all font-medium text-slate-700 resize-none min-h-[100px]"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-medium text-slate-700 resize-none min-h-[100px]"
                   placeholder="Misal: Pembayaran via Bank BCA a/n Budi"
                   value={formData.notes}
                   onChange={(e) => setFormData({...formData, notes: e.target.value})}
@@ -245,7 +245,7 @@ export function PaymentConfirmation() {
               type="submit"
               className={clsx(
                 "w-full px-8 py-4 rounded-2xl font-black text-white transition-all flex items-center justify-center gap-3 shadow-lg",
-                loading ? "bg-slate-400" : "bg-violet-600 hover:bg-violet-700 shadow-violet-200"
+                loading ? "bg-slate-400" : "bg-lime-600 hover:bg-lime-700 shadow-lime-200"
               )}
             >
               {loading ? (

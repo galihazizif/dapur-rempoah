@@ -20,7 +20,7 @@ export const Hero = () => {
                 <div className="rounded-md shadow">
                   <a
                     href="#menu"
-                    className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-violet-600 hover:bg-violet-700 md:py-4 md:text-lg md:px-10 transition-colors"
+                    className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-lime-600 hover:bg-lime-700 md:py-4 md:text-lg md:px-10 transition-colors"
                   >
                     Pesan Sekarang
                   </a>
@@ -28,7 +28,7 @@ export const Hero = () => {
                 <div className="mt-3 sm:mt-0 sm:ml-3">
                   <a
                     href="https://wa.me/6285117054626"
-                    className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-violet-700 bg-violet-100 hover:bg-violet-200 md:py-4 md:text-lg md:px-10 transition-colors"
+                    className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-lime-700 bg-lime-100 hover:bg-lime-200 md:py-4 md:text-lg md:px-10 transition-colors"
                   >
                     <img src={waLogo} className="w-6 h-6 mr-2" /> WhatsApp
                   </a>

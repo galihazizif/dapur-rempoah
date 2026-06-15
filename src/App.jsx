@@ -74,9 +74,9 @@ function App() {
             <div>
               <h4 className="font-bold text-slate-900 mb-4">Navigasi</h4>
               <ul className="space-y-2 text-slate-500">
-                <li><a href="/#menu" className="hover:text-violet-600 transition-colors">Menu</a></li>
-                <li><a href="#" className="hover:text-violet-600 transition-colors">Tentang Kami</a></li>
-                <li><a href="#" className="hover:text-violet-600 transition-colors">Promo</a></li>
+                <li><a href="/#menu" className="hover:text-lime-600 transition-colors">Menu</a></li>
+                <li><a href="#" className="hover:text-lime-600 transition-colors">Tentang Kami</a></li>
+                <li><a href="#" className="hover:text-lime-600 transition-colors">Promo</a></li>
               </ul>
             </div>
             <div>

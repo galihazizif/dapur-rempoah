@@ -150,8 +150,8 @@ export function OrderDetail() {
                     <MessageCircle size={20} />
                   </div>
                   <div>
-                    <p className="font-bold text-slate-900">Hubungi Admin</p>
-                    <p className="text-sm text-slate-500">Tanya ketersediaan pesanan ke Admin via WhatsApp.</p>
+                    <p className="font-bold text-slate-900">Hubungi Admin untuk mempercepat pesanan</p>
+                    <p className="text-sm text-slate-500">Atau tunggu konfirmasi dari kami terkait pesanan</p>
                   </div>
                 </div>
                 <a 

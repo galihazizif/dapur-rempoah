@@ -373,7 +373,7 @@ export default {
           `📞 WhatsApp: ${customer.phone}\n` +
           `📍 Alamat: ${customer.address}\n` +
           `💰 Total: <b>Rp ${calculatedTotal.toLocaleString('id-ID')}</b>\n\n` +
-          `<a href="https://rempoah.my.id/admin/orders">Kelola Pesanan</a>`
+          `<a href="https://rempoah.my.id/orders/${orderHash}">Kelola Pesanan</a>`
         ));
 
         return new Response(JSON.stringify({

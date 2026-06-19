@@ -129,7 +129,7 @@ export function AdminSettings() {
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">Pengaturan Toko</h1>
           </div>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3" style={{"overflow-x": "auto"}}>
           <Link 
             to="/admin"
             className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-sm"

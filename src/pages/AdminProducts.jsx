@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, CheckCircle2, XCircle, ChevronLeft, Package, Search, CreditCard, ShoppingBag, Ticket } from 'lucide-react';
+import { Plus, Edit2, Trash2, MoreVertical, CheckCircle2, XCircle, ChevronLeft, Package, Search, CreditCard, ShoppingBag, Ticket } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Link } from 'react-router-dom';
 
@@ -11,6 +11,7 @@ export function AdminProducts() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  const [openDropdownId, setOpenDropdownId] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     category: 'makanan',
@@ -51,6 +52,12 @@ export function AdminProducts() {
       fetchProducts();
     }
   }, [adminToken]);
+
+  useEffect(() => {
+    const handleClick = () => setOpenDropdownId(null);
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, []);
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -221,7 +228,7 @@ export function AdminProducts() {
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">Kelola Produk</h1>
           </div>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3" style={{"overflow-x": "auto"}}>
           <Link 
             to="/admin/orders"
             className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-sm"
@@ -282,7 +289,7 @@ export function AdminProducts() {
               ) : filteredProducts.length === 0 ? (
                 <tr><td colSpan="5" className="px-6 py-12 text-center text-slate-400">Tidak ada produk ditemukan.</td></tr>
               ) : filteredProducts.map((product) => (
-                <tr key={product.id} className="hover:bg-slate-50/50 transition-colors group">
+                <tr key={product.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
                       <img 
@@ -312,21 +319,32 @@ export function AdminProducts() {
                       {product.available ? 'Tersedia' : 'Habis'}
                     </button>
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
-                        onClick={() => handleOpenModal(product)}
-                        className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+                  <td className="px-6 py-4 text-right relative">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setOpenDropdownId(openDropdownId === product.id ? null : product.id) }}
+                      className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+                    >
+                      <MoreVertical size={18} />
+                    </button>
+                    {openDropdownId === product.id && (
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-4 top-12 z-50 w-40 bg-white rounded-xl shadow-lg border border-slate-100 py-1 animate-in fade-in zoom-in duration-150 origin-top-right"
                       >
-                        <Edit2 size={18} />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(product.id)}
-                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
+                        <button
+                          onClick={() => { handleOpenModal(product); setOpenDropdownId(null) }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 transition-all text-left"
+                        >
+                          <Edit2 size={16} /> Edit
+                        </button>
+                        <button
+                          onClick={() => { handleDelete(product.id); setOpenDropdownId(null) }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-slate-600 hover:text-rose-600 hover:bg-rose-50 transition-all text-left"
+                        >
+                          <Trash2 size={16} /> Hapus
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}

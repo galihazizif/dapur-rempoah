@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Send, Phone, User, MapPin, CheckCircle2 } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
@@ -43,10 +43,9 @@ export const OrderForm = ({ onSuccess }) => {
   const [error, setError] = useState(null);
   const [turnstileToken, setTurnstileToken] = useState(null);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    address: ''
+  const [formData, setFormData] = useState(() => {
+    const saved = localStorage.getItem('orderFormData');
+    return saved ? JSON.parse(saved) : { name: '', phone: '', address: '' };
   });
 
   const [mapPosition, setMapPosition] = useState(null);
@@ -158,6 +157,7 @@ export const OrderForm = ({ onSuccess }) => {
       setTimeout(() => {
         clearCart();
         onSuccess();
+        setDone(false);
         navigate(`/orders/${result.hash}`);
       }, 2000);
     } catch (err) {
@@ -172,6 +172,10 @@ export const OrderForm = ({ onSuccess }) => {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  useEffect(() => {
+    localStorage.setItem('orderFormData', JSON.stringify(formData));
+  }, [formData]);
 
   if (done) {
     return (

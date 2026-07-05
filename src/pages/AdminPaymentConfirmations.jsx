@@ -233,7 +233,7 @@ export function AdminPaymentConfirmations() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <p className="text-[10px] text-slate-400 font-medium">Masuk: {new Date(conf.created_at).toLocaleString('id-ID')}</p>
+                    <p className="text-[10px] text-slate-400 font-medium">Masuk: {new Date(conf.created_at.replace(' ', 'T') + 'Z').toLocaleString('id-ID')}</p>
                   </td>
                 </tr>
               ))}

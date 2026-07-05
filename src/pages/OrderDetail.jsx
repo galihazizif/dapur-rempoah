@@ -121,7 +121,7 @@ export function OrderDetail() {
                 <span className="font-medium uppercase">{order.payment_method}</span>
               </div>
               <p className="text-slate-500 text-sm mt-2">Dipesan pada:</p>
-              <p className="text-slate-900 font-medium">{new Date(order.created_at).toLocaleString('id-ID')}</p>
+              <p className="text-slate-900 font-medium">{new Date(order.created_at.replace(' ', 'T') + 'Z').toLocaleString('id-ID')}</p>
             </div>
           </div>
         </div>

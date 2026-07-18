@@ -13,6 +13,8 @@ export function AdminOrders() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [editingFees, setEditingFees] = useState(null);
+  const [editingItems, setEditingItems] = useState(null);
+  const [availableProducts, setAvailableProducts] = useState([]);
   
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787';
   const [adminToken, setAdminToken] = useState(localStorage.getItem('admin_token') || '');
@@ -70,6 +72,51 @@ export function AdminOrders() {
       if (response.ok) fetchOrders();
     } catch (err) {
       alert('Gagal mengupdate pesanan');
+    }
+  };
+
+  const handleOpenEditItems = async (orderId, orderHash) => {
+    try {
+      setLoading(true);
+      const [orderRes, productsRes] = await Promise.all([
+        fetch(`${apiUrl}/orders/${orderHash}`),
+        fetch(`${apiUrl}/products`)
+      ]);
+      const orderData = await orderRes.json();
+      const productsData = await productsRes.json();
+      if (orderData.success) {
+        setAvailableProducts(productsData.filter(p => p.available));
+        setEditingItems({ id: orderId, hash: orderHash, items: orderData.items });
+      } else {
+        alert('Gagal memuat pesanan: ' + orderData.message);
+      }
+    } catch (err) {
+      alert('Gagal memuat detail item pesanan');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveItems = async () => {
+    try {
+      const requestItems = editingItems.items.map(item => ({ product_id: item.product_id, quantity: parseInt(item.quantity) }));
+      const response = await fetch(`${apiUrl}/admin/orders/${editingItems.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({ items: requestItems })
+      });
+      if (response.ok) {
+        setEditingItems(null);
+        fetchOrders();
+      } else {
+        const errData = await response.json();
+        alert('Gagal menyimpan item: ' + errData.message);
+      }
+    } catch (err) {
+      alert('Gagal menyimpan item pesanan');
     }
   };
 
@@ -302,12 +349,20 @@ export function AdminOrders() {
                       Detail
                     </Link>
                     {(order.status === 'pending' || order.status === 'pending payment') && (
-                      <button
-                        onClick={() => setEditingFees({ id: order.id, shipping_fee: order.shipping_fee || 0, additional_fee: order.additional_fee || 0 })}
-                        className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-md hover:bg-orange-100 transition-colors border border-orange-100"
-                      >
-                        Sesuaikan Biaya
-                      </button>
+                      <div className="flex flex-col gap-1 w-full mt-2">
+                        <button
+                          onClick={() => setEditingFees({ id: order.id, shipping_fee: order.shipping_fee || 0, additional_fee: order.additional_fee || 0 })}
+                          className="w-full text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-1.5 rounded-md hover:bg-orange-100 transition-colors border border-orange-100"
+                        >
+                          Sesuaikan Biaya
+                        </button>
+                        <button
+                          onClick={() => handleOpenEditItems(order.id, order.hash)}
+                          className="w-full text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1.5 rounded-md hover:bg-blue-100 transition-colors border border-blue-100"
+                        >
+                          Edit Item
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -395,6 +450,96 @@ export function AdminOrders() {
                 className="flex-1 px-4 py-3 bg-lime-600 text-white font-bold rounded-xl hover:bg-lime-700 transition-colors shadow-md"
               >
                 Simpan Biaya
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingItems && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-xl max-h-[90vh] flex flex-col">
+            <h3 className="text-lg font-black text-slate-900 mb-4 flex items-center gap-2 flex-shrink-0">
+              <Package className="text-lime-600" size={20} />
+              Edit Item Pesanan #{editingItems.id}
+            </h3>
+            
+            <div className="overflow-y-auto pr-2 space-y-4 flex-1">
+              {editingItems.items.map((item, index) => (
+                <div key={index} className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <div className="flex-1">
+                    <p className="font-bold text-sm text-slate-700 truncate">{item.product_name}</p>
+                    <p className="text-xs text-slate-500">Rp {(item.price || 0).toLocaleString('id-ID')}</p>
+                  </div>
+                  <div className="flex items-center gap-3 ml-4">
+                    <div className="relative w-16">
+                      <input 
+                        type="number" 
+                        min="1"
+                        className="w-full pl-2 pr-2 py-1.5 bg-white border border-slate-200 rounded-lg outline-none text-center font-bold text-sm focus:ring-2 focus:ring-lime-500"
+                        value={item.quantity}
+                        onChange={(e) => {
+                          const newItems = [...editingItems.items];
+                          newItems[index].quantity = e.target.value;
+                          setEditingItems({...editingItems, items: newItems});
+                        }}
+                      />
+                    </div>
+                    <button 
+                      onClick={() => {
+                        const newItems = editingItems.items.filter((_, i) => i !== index);
+                        setEditingItems({...editingItems, items: newItems});
+                      }}
+                      className="text-rose-400 p-1 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                      title="Hapus Item"
+                    >
+                      <XCircle size={20} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              
+              <div className="mt-6 pt-4 border-t border-slate-100">
+                <label className="block text-xs font-bold text-slate-500 mb-2">Tambah Item Baru</label>
+                <select 
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none font-bold text-slate-700 text-sm focus:ring-2 focus:ring-lime-500"
+                  onChange={(e) => {
+                    const productId = parseInt(e.target.value);
+                    if (!productId) return;
+                    const product = availableProducts.find(p => p.id === productId);
+                    if (product) {
+                      setEditingItems({
+                        ...editingItems,
+                        items: [
+                          ...editingItems.items,
+                          { product_id: product.id, product_name: product.name, price: product.price, quantity: 1 }
+                        ]
+                      });
+                    }
+                    e.target.value = "";
+                  }}
+                >
+                  <option value="">-- Pilih Produk --</option>
+                  {availableProducts.map(p => (
+                    <option key={p.id} value={p.id}>{p.name} - Rp {p.price.toLocaleString('id-ID')}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6 pt-6 border-t border-slate-100 flex-shrink-0">
+              <button 
+                onClick={() => setEditingItems(null)}
+                className="flex-1 px-4 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-colors"
+              >
+                Batal
+              </button>
+              <button 
+                onClick={handleSaveItems}
+                disabled={editingItems.items.length === 0}
+                className="flex-1 px-4 py-3 bg-lime-600 text-white font-bold rounded-xl hover:bg-lime-700 transition-colors shadow-md disabled:opacity-50"
+              >
+                Simpan Items
               </button>
             </div>
           </div>

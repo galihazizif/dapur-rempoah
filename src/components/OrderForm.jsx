@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, Phone, User, MapPin, CheckCircle2 } from 'lucide-react';
+import { Send, Phone, User, MapPin, CheckCircle2, Calendar, Clock, Truck, Store } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import { Turnstile } from '@marsidev/react-turnstile';
 
@@ -45,7 +45,7 @@ export const OrderForm = ({ onSuccess }) => {
 
   const [formData, setFormData] = useState(() => {
     const saved = localStorage.getItem('orderFormData');
-    return saved ? JSON.parse(saved) : { name: '', phone: '', address: '' };
+    return saved ? JSON.parse(saved) : { name: '', phone: '', address: '', order_type: 'delivery', pickup_delivery_date: '', pickup_delivery_time: '' };
   });
 
   const [mapPosition, setMapPosition] = useState(null);
@@ -228,47 +228,98 @@ export const OrderForm = ({ onSuccess }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1.5">Alamat Pengiriman</label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-3 text-slate-400" size={18} />
-            <textarea
-              required
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              rows="3"
-              placeholder="Masukkan alamat lengkap pengiriman..."
-              className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none transition-all resize-none"
-            />
+          <label className="block text-sm font-semibold text-slate-700 mb-1.5">Tipe Pesanan</label>
+          <div className="grid grid-cols-2 gap-4">
+            <label className={`flex items-center justify-center gap-2 p-4 rounded-xl border cursor-pointer transition-all ${formData.order_type === 'delivery' ? 'bg-lime-50 border-lime-500 text-lime-700' : 'bg-white border-slate-200 text-slate-500 hover:border-lime-200'}`}>
+              <input type="radio" name="order_type" value="delivery" checked={formData.order_type === 'delivery'} onChange={handleChange} className="hidden" />
+              <Truck size={20} />
+              <span className="font-bold text-sm">Pesan Antar</span>
+            </label>
+            <label className={`flex items-center justify-center gap-2 p-4 rounded-xl border cursor-pointer transition-all ${formData.order_type === 'pickup' ? 'bg-lime-50 border-lime-500 text-lime-700' : 'bg-white border-slate-200 text-slate-500 hover:border-lime-200'}`}>
+              <input type="radio" name="order_type" value="pickup" checked={formData.order_type === 'pickup'} onChange={handleChange} className="hidden" />
+              <Store size={20} />
+              <span className="font-bold text-sm">Ambil Sendiri</span>
+            </label>
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1.5">Titik Lokasi Pengiriman (Opsional)</label>
-          <div className="h-64 w-full rounded-xl overflow-hidden border border-slate-200 relative z-0">
-            <MapContainer
-              center={[-7.394801, 109.344261]}
-              zoom={13}
-              scrollWheelZoom={true}
-              style={{ height: "100%", width: "100%", zIndex: 0 }}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Tanggal {formData.order_type === 'delivery' ? 'Kirim' : 'Ambil'}</label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input
+                required
+                type="date"
+                name="pickup_delivery_date"
+                value={formData.pickup_delivery_date}
+                onChange={handleChange}
+                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none transition-all"
               />
-              <LocationMarker
-                position={mapPosition}
-                setPosition={setMapPosition}
-                onPositionSelected={handlePositionSelected}
-              />
-            </MapContainer>
+            </div>
           </div>
-          {mapPosition && (
-            <p className="text-xs text-slate-500 mt-2">
-              Koordinat terpilih: {mapPosition.lat.toFixed(6)}, {mapPosition.lng.toFixed(6)}
-            </p>
-          )}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Waktu {formData.order_type === 'delivery' ? 'Kirim' : 'Ambil'}</label>
+            <div className="relative">
+              <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input
+                required
+                type="time"
+                name="pickup_delivery_time"
+                value={formData.pickup_delivery_time}
+                onChange={handleChange}
+                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none transition-all"
+              />
+            </div>
+          </div>
         </div>
+
+        {formData.order_type === 'delivery' && (
+          <>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Alamat Pengiriman</label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-3 text-slate-400" size={18} />
+                <textarea
+                  required
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  rows="3"
+                  placeholder="Masukkan alamat lengkap pengiriman..."
+                  className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none transition-all resize-none"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Titik Lokasi Pengiriman (Opsional)</label>
+              <div className="h-64 w-full rounded-xl overflow-hidden border border-slate-200 relative z-0">
+                <MapContainer
+                  center={[-7.394801, 109.344261]}
+                  zoom={13}
+                  scrollWheelZoom={true}
+                  style={{ height: "100%", width: "100%", zIndex: 0 }}
+                >
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  <LocationMarker
+                    position={mapPosition}
+                    setPosition={setMapPosition}
+                    onPositionSelected={handlePositionSelected}
+                  />
+                </MapContainer>
+              </div>
+              {mapPosition && (
+                <p className="text-xs text-slate-500 mt-2">
+                  Koordinat terpilih: {mapPosition.lat.toFixed(6)}, {mapPosition.lng.toFixed(6)}
+                </p>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Turnstile Widget */}

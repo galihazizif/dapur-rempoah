@@ -12,6 +12,9 @@ CREATE TABLE IF NOT EXISTS orders (
   discount_amount INTEGER DEFAULT 0,
   shipping_fee INTEGER DEFAULT 0,
   additional_fee INTEGER DEFAULT 0,
+  order_type TEXT DEFAULT 'delivery',
+  pickup_delivery_date TEXT,
+  pickup_delivery_time TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

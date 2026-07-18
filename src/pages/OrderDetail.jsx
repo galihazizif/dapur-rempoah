@@ -107,12 +107,29 @@ export function OrderDetail() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
             <div>
               <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Informasi Pelanggan</h3>
               <p className="font-bold text-slate-900">{order.customer_name}</p>
               <p className="text-slate-500 mt-1">{order.customer_phone}</p>
-              <p className="text-slate-500 text-sm mt-2">{order.customer_address}</p>
+              {(!order.order_type || order.order_type === 'delivery') && (
+                <p className="text-slate-500 text-sm mt-2">{order.customer_address}</p>
+              )}
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Tipe Pesanan</h3>
+              <div className="flex items-center gap-2 text-slate-700">
+                <Package className="w-4 h-4" />
+                <span className="font-medium uppercase">
+                  {order.order_type === 'pickup' ? 'Ambil Sendiri' : 'Pesan Antar'}
+                </span>
+              </div>
+              {(order.pickup_delivery_date || order.pickup_delivery_time) && (
+                <>
+                  <p className="text-slate-500 text-sm mt-2">{order.order_type === 'pickup' ? 'Waktu Ambil:' : 'Waktu Kirim:'}</p>
+                  <p className="text-slate-900 font-medium">{order.pickup_delivery_date} {order.pickup_delivery_time}</p>
+                </>
+              )}
             </div>
             <div>
               <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Info Pembayaran</h3>

@@ -219,6 +219,7 @@ export default {
       try {
         const orderData = await request.json();
         const { customer, items, turnstileToken, voucherCode } = orderData;
+        const { order_type = 'delivery', pickup_delivery_date = null, pickup_delivery_time = null } = customer;
 
         const orderId = generateFriendlyId('ORD');
         const orderHash = Math.random().toString(36).substring(2, 12);
@@ -319,9 +320,9 @@ export default {
         // Insert order summary
         statements.push(
           env.DB.prepare(`
-            INSERT INTO orders (id, hash, customer_name, customer_phone, customer_address, total_amount, status, payment_method, payment_status, voucher_code, discount_amount)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          `).bind(orderId, orderHash, customer.name, customer.phone, customer.address, calculatedTotal, 'pending', 'qris', 'unpaid', voucherCode ? voucherCode.trim().toUpperCase() : null, discountAmount)
+            INSERT INTO orders (id, hash, customer_name, customer_phone, customer_address, total_amount, status, payment_method, payment_status, voucher_code, discount_amount, order_type, pickup_delivery_date, pickup_delivery_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).bind(orderId, orderHash, customer.name, customer.phone, customer.address, calculatedTotal, 'pending', 'qris', 'unpaid', voucherCode ? voucherCode.trim().toUpperCase() : null, discountAmount, order_type, pickup_delivery_date, pickup_delivery_time)
         );
 
         if (appliedVoucher) {
@@ -371,7 +372,10 @@ export default {
           `🆔 ID: #${orderId}\n` +
           `👤 Pelanggan: ${customer.name}\n` +
           `📞 WhatsApp: ${customer.phone}\n` +
-          `📍 Alamat: ${customer.address}\n` +
+          `🚚 Tipe: ${order_type}\n` +
+          `${pickup_delivery_date ? `📅 Tanggal: ${pickup_delivery_date}\n` : ''}` +
+          `${pickup_delivery_time ? `⏰ Waktu: ${pickup_delivery_time}\n` : ''}` +
+          `${order_type === 'delivery' ? `📍 Alamat: ${customer.address}\n` : ''}` +
           `💰 Total: <b>Rp ${calculatedTotal.toLocaleString('id-ID')}</b>\n\n` +
           `<a href="https://rempoah.my.id/orders/${orderHash}">Kelola Pesanan</a>`
         ));
@@ -749,47 +753,75 @@ export default {
       if (!checkAuth()) return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 401, headers: corsHeaders });
       try {
         const id = url.pathname.split("/")[3];
-        const { status, payment_status, shipping_fee, additional_fee } = await request.json();
+        const { status, payment_status, shipping_fee, additional_fee, items } = await request.json();
 
-        if (shipping_fee !== undefined || additional_fee !== undefined) {
-          const order = await env.DB.prepare("SELECT * FROM orders WHERE id = ?").bind(id).first();
-          if (!order) {
-            return new Response(JSON.stringify({ success: false, message: "Order not found" }), { status: 404, headers: corsHeaders });
-          }
-
-          const items = await env.DB.prepare("SELECT * FROM order_items WHERE order_id = ?").bind(id).all();
-          const itemsBaseTotal = items.results.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-          
-          const newShipping = shipping_fee !== undefined ? shipping_fee : (order.shipping_fee || 0);
-          const newAdditional = additional_fee !== undefined ? additional_fee : (order.additional_fee || 0);
-          
-          let calculatedTotal = itemsBaseTotal - (order.discount_amount || 0) + newShipping + newAdditional;
-          if (calculatedTotal < 0) calculatedTotal = 0;
-
-          await env.DB.prepare(`
-            UPDATE orders 
-            SET status = COALESCE(?, status), 
-                payment_status = COALESCE(?, payment_status),
-                shipping_fee = ?,
-                additional_fee = ?,
-                total_amount = ?
-            WHERE id = ?
-          `).bind(
-            status === undefined ? null : status, 
-            payment_status === undefined ? null : payment_status, 
-            newShipping, 
-            newAdditional, 
-            calculatedTotal, 
-            id
-          ).run();
-        } else {
-          await env.DB.prepare(`
-            UPDATE orders 
-            SET status = COALESCE(?, status), 
-                payment_status = COALESCE(?, payment_status)
-            WHERE id = ?
-          `).bind(status === undefined ? null : status, payment_status === undefined ? null : payment_status, id).run();
+        const order = await env.DB.prepare("SELECT * FROM orders WHERE id = ?").bind(id).first();
+        if (!order) {
+          return new Response(JSON.stringify({ success: false, message: "Order not found" }), { status: 404, headers: corsHeaders });
         }
+
+        const statements = [];
+        let itemsBaseTotal = 0;
+
+        // If items are provided, process items update first
+        if (items && Array.isArray(items)) {
+          // Delete old items
+          statements.push(env.DB.prepare("DELETE FROM order_items WHERE order_id = ?").bind(id));
+          
+          // Validate and insert new items
+          const productIds = items.map(item => item.product_id);
+          const { results: dbProducts } = await env.DB.prepare(`
+            SELECT * FROM products WHERE id IN (${productIds.map(() => '?').join(',')})
+          `).bind(...productIds).all();
+
+          for (const item of items) {
+            const menuProduct = dbProducts.find(p => p.id === item.product_id);
+            if (!menuProduct) {
+              throw new Error(`Product with ID ${item.product_id} not found`);
+            }
+            const quantity = parseInt(item.quantity);
+            if (isNaN(quantity) || quantity <= 0) {
+              throw new Error(`Invalid quantity for product ${menuProduct.name}`);
+            }
+            itemsBaseTotal += menuProduct.price * quantity;
+            
+            statements.push(
+              env.DB.prepare(`
+                INSERT INTO order_items (order_id, product_id, product_name, price, quantity)
+                VALUES (?, ?, ?, ?, ?)
+              `).bind(id, item.product_id, menuProduct.name, menuProduct.price, quantity)
+            );
+          }
+        } else {
+          // Use existing items total
+          const existingItems = await env.DB.prepare("SELECT * FROM order_items WHERE order_id = ?").bind(id).all();
+          itemsBaseTotal = existingItems.results.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+        }
+
+        const newShipping = shipping_fee !== undefined ? shipping_fee : (order.shipping_fee || 0);
+        const newAdditional = additional_fee !== undefined ? additional_fee : (order.additional_fee || 0);
+        
+        let calculatedTotal = itemsBaseTotal - (order.discount_amount || 0) + newShipping + newAdditional;
+        if (calculatedTotal < 0) calculatedTotal = 0;
+
+        statements.push(env.DB.prepare(`
+          UPDATE orders 
+          SET status = COALESCE(?, status), 
+              payment_status = COALESCE(?, payment_status),
+              shipping_fee = ?,
+              additional_fee = ?,
+              total_amount = ?
+          WHERE id = ?
+        `).bind(
+          status === undefined ? null : status, 
+          payment_status === undefined ? null : payment_status, 
+          newShipping, 
+          newAdditional, 
+          calculatedTotal, 
+          id
+        ));
+
+        await env.DB.batch(statements);
 
         return new Response(JSON.stringify({ success: true, message: "Order updated" }), { headers: corsHeaders });
       } catch (error) {

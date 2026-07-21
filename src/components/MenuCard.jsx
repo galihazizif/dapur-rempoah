@@ -12,7 +12,7 @@ export const MenuCard = ({ item }) => {
   const isAvailable = item.available && storeStatus === 'open';
 
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787';
-  
+
   const getImageUrl = (url) => {
     if (!url) return 'https://via.placeholder.com/400x300?text=Menu';
     if (url.startsWith('http')) return url;
@@ -25,8 +25,8 @@ export const MenuCard = ({ item }) => {
       !isAvailable && "opacity-60 grayscale"
     )}>
       <div className="relative h-48 overflow-hidden">
-        <img 
-          src={getImageUrl(item.image_url)} 
+        <img
+          src={getImageUrl(item.image_url)}
           alt={item.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
@@ -41,32 +41,46 @@ export const MenuCard = ({ item }) => {
           Rp {item.price.toLocaleString('id-ID')}
         </div>
       </div>
-      
+
       <div className="p-5">
         <div className="flex justify-between items-start mb-2">
           <h3 className="text-lg font-bold text-slate-900 group-hover:text-lime-600 transition-colors">
             {item.name}
           </h3>
-          <span className="text-xs font-medium px-2 py-1 bg-slate-100 text-slate-500 rounded-md uppercase tracking-wider">
+          <span className="hidden md:block text-xs font-medium px-2 py-1 bg-slate-100 text-slate-500 rounded-md uppercase tracking-wider">
             {item.category}
           </span>
         </div>
         <p className="text-slate-500 text-sm line-clamp-2 mb-4 h-10">
           {item.description}
         </p>
-        
+
         <button
           disabled={!isAvailable}
           onClick={() => addItem(item)}
           className={cn(
-            "w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold transition-all duration-200",
-            isAvailable 
-              ? "bg-slate-900 text-white hover:bg-lime-600 active:scale-95" 
+            "hidden md:flex w-full items-center justify-center gap-2 py-2.5 rounded-xl font-semibold transition-all duration-200",
+            isAvailable
+              ? "bg-slate-900 text-white hover:bg-lime-600 active:scale-95"
               : "bg-slate-200 text-slate-400 cursor-not-allowed"
           )}
         >
           <ShoppingCart size={18} />
           {cartItem ? `Tambah Lagi (${cartItem.quantity})` : 'Tambah ke Keranjang'}
+        </button>
+
+        <button
+          disabled={!isAvailable}
+          onClick={() => addItem(item)}
+          className={cn(
+            "flex md:hidden w-full items-center justify-center gap-2 py-2.5 rounded-xl font-semibold transition-all duration-200",
+            isAvailable
+              ? "bg-slate-900 text-white hover:bg-lime-600 active:scale-95"
+              : "bg-slate-200 text-slate-400 cursor-not-allowed"
+          )}
+        >
+          <ShoppingCart size={18} />
+          {cartItem ? `Tambah (${cartItem.quantity})` : 'Tambah'}
         </button>
       </div>
     </div>

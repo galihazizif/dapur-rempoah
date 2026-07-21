@@ -3,11 +3,11 @@ import { MenuCard } from './MenuCard';
 
 export const MenuSection = ({ menu = [], loading, error }) => {
   const [filter, setFilter] = useState('all');
-  
+
   const categories = ['all', 'makanan', 'minuman', 'camilan'];
-  
-  const filteredMenu = filter === 'all' 
-    ? menu 
+
+  const filteredMenu = filter === 'all'
+    ? menu
     : menu.filter(item => item.category === filter);
 
   return (
@@ -27,11 +27,10 @@ export const MenuSection = ({ menu = [], loading, error }) => {
             <button
               key={cat}
               onClick={() => setFilter(cat)}
-              className={`px-6 py-2 rounded-full text-sm font-semibold capitalize transition-all duration-200 ${
-                filter === cat
+              className={`px-6 py-2 rounded-full text-sm font-semibold capitalize transition-all duration-200 ${filter === cat
                   ? 'bg-lime-600 text-white shadow-lg shadow-lime-200'
                   : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-              }`}
+                }`}
             >
               {cat}
             </button>
@@ -45,7 +44,7 @@ export const MenuSection = ({ menu = [], loading, error }) => {
         ) : error ? (
           <div className="text-center py-20">
             <p className="text-red-500 mb-4">{error}</p>
-            <button 
+            <button
               onClick={() => window.location.reload()}
               className="px-4 py-2 bg-slate-200 hover:bg-slate-300 rounded-lg transition-colors"
             >
@@ -53,7 +52,7 @@ export const MenuSection = ({ menu = [], loading, error }) => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredMenu.map((item) => (
               <MenuCard key={item.id} item={item} />
             ))}

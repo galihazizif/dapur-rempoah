@@ -4,6 +4,19 @@ export default {
 
     const ADMIN_SECRET = env.ADMIN_SECRET || "rempoah-admin-2026";
 
+    const STORE_COORDS = { lat: -7.394778, lng: 109.344413 };
+
+    const haversineDistance = (lat1, lng1, lat2, lng2) => {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) ** 2 +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLng / 2) ** 2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    };
+
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
@@ -218,8 +231,8 @@ export default {
     if (url.pathname === "/orders" && request.method === "POST") {
       try {
         const orderData = await request.json();
-        const { customer, items, turnstileToken, voucherCode } = orderData;
-        const { order_type = 'delivery', pickup_delivery_date = null, pickup_delivery_time = null } = customer;
+        const { customer, items, turnstileToken, voucherCode, shippingFee } = orderData;
+        const { order_type = 'delivery', pickup_delivery_date = null, pickup_delivery_time = null, latitude, longitude } = customer;
 
         const orderId = generateFriendlyId('ORD');
         const orderHash = Math.random().toString(36).substring(2, 12);
@@ -314,15 +327,27 @@ export default {
           discountAmount = voucher.amount;
         }
 
-        calculatedTotal -= discountAmount;
+        let shippingFeeAmount = 0;
+        if (order_type === 'delivery' && latitude && longitude) {
+          const distance = haversineDistance(STORE_COORDS.lat, STORE_COORDS.lng, parseFloat(latitude), parseFloat(longitude));
+          if (distance > 10) {
+            return new Response(JSON.stringify({
+              success: false,
+              message: "Lokasi pengiriman terlalu jauh (maksimal 10 km)."
+            }), { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
+          }
+          shippingFeeAmount = Math.round(distance * 1000);
+        }
+
+        calculatedTotal = calculatedTotal - discountAmount + shippingFeeAmount;
         if (calculatedTotal < 0) calculatedTotal = 0;
 
         // Insert order summary
         statements.push(
           env.DB.prepare(`
-            INSERT INTO orders (id, hash, customer_name, customer_phone, customer_address, total_amount, status, payment_method, payment_status, voucher_code, discount_amount, order_type, pickup_delivery_date, pickup_delivery_time)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          `).bind(orderId, orderHash, customer.name, customer.phone, customer.address, calculatedTotal, 'pending', 'qris', 'unpaid', voucherCode ? voucherCode.trim().toUpperCase() : null, discountAmount, order_type, pickup_delivery_date, pickup_delivery_time)
+            INSERT INTO orders (id, hash, customer_name, customer_phone, customer_address, total_amount, status, payment_method, payment_status, voucher_code, discount_amount, order_type, pickup_delivery_date, pickup_delivery_time, shipping_fee)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).bind(orderId, orderHash, customer.name, customer.phone, customer.address, calculatedTotal, 'pending', 'qris', 'unpaid', voucherCode ? voucherCode.trim().toUpperCase() : null, discountAmount, order_type, pickup_delivery_date, pickup_delivery_time, shippingFeeAmount)
         );
 
         if (appliedVoucher) {
@@ -376,6 +401,7 @@ export default {
           `${pickup_delivery_date ? `📅 Tanggal: ${pickup_delivery_date}\n` : ''}` +
           `${pickup_delivery_time ? `⏰ Waktu: ${pickup_delivery_time}\n` : ''}` +
           `${order_type === 'delivery' ? `📍 Alamat: ${customer.address}\n` : ''}` +
+          `${shippingFeeAmount > 0 ? `🚚 Ongkos Kirim: Rp ${shippingFeeAmount.toLocaleString('id-ID')}\n` : ''}` +
           `💰 Total: <b>Rp ${calculatedTotal.toLocaleString('id-ID')}</b>\n\n` +
           `<a href="https://rempoah.my.id/orders/${orderHash}">Kelola Pesanan</a>`
         ));
@@ -385,7 +411,8 @@ export default {
           message: "Order placed successfully",
           orderId,
           hash: orderHash,
-          total: calculatedTotal
+          total: calculatedTotal,
+          shippingFee: shippingFeeAmount
         }), {
           status: 201,
           headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type" },

@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, Phone, User, MapPin, CheckCircle2, Calendar, Clock, Truck, Store } from 'lucide-react';
+import { Send, Phone, User, MapPin, CheckCircle2, Calendar, Clock, Truck, Store, Navigation } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import { Turnstile } from '@marsidev/react-turnstile';
+import { haversineDistance } from '../lib/utils';
 
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -30,6 +31,12 @@ function LocationMarker({ position, setPosition, onPositionSelected }) {
     },
   });
 
+  useEffect(() => {
+    if (position) {
+      map.flyTo(position, map.getZoom());
+    }
+  }, [position, map]);
+
   return position === null ? null : (
     <Marker position={position}></Marker>
   );
@@ -49,6 +56,29 @@ export const OrderForm = ({ onSuccess }) => {
   });
 
   const [mapPosition, setMapPosition] = useState(null);
+  const [isLocating, setIsLocating] = useState(false);
+
+  const handleGetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation tidak didukung oleh browser Anda");
+      return;
+    }
+    
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const latlng = { lat: position.coords.latitude, lng: position.coords.longitude };
+        handlePositionSelected(latlng);
+        setIsLocating(false);
+      },
+      (error) => {
+        alert("Gagal mendapatkan lokasi. Pastikan izin lokasi diberikan.");
+        console.error(error);
+        setIsLocating(false);
+      },
+      { enableHighAccuracy: true }
+    );
+  };
 
   const handlePositionSelected = (latlng) => {
     setMapPosition(latlng);
@@ -74,6 +104,15 @@ export const OrderForm = ({ onSuccess }) => {
   const [appliedVoucher, setAppliedVoucher] = useState(null);
   const [voucherError, setVoucherError] = useState(null);
   const [validatingVoucher, setValidatingVoucher] = useState(false);
+
+  const STORE_COORDS = { lat: -7.394778, lng: 109.344413 };
+  const deliveryDistance = React.useMemo(() => {
+    if (formData.order_type !== 'delivery' || !mapPosition) return null;
+    return haversineDistance(STORE_COORDS.lat, STORE_COORDS.lng, mapPosition.lat, mapPosition.lng);
+  }, [mapPosition, formData.order_type]);
+  const deliveryCost = deliveryDistance !== null ? Math.max(1000, Math.round(deliveryDistance * 1000)) : 0;
+  const isDistanceTooFar = deliveryDistance !== null && deliveryDistance > 10;
+  const totalWithDelivery = Math.max(0, getTotal() - (appliedVoucher?.amount || 0) + deliveryCost);
 
   const handleApplyVoucher = async () => {
     if (!voucherInput.trim()) return;
@@ -109,6 +148,11 @@ export const OrderForm = ({ onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (formData.order_type === 'delivery' && !mapPosition) {
+      setError('Mohon tentukan titik lokasi pengiriman pada peta.');
+      return;
+    }
+
     if (!turnstileToken) {
       setError('Mohon selesaikan verifikasi keamanan.');
       return;
@@ -132,7 +176,8 @@ export const OrderForm = ({ onSuccess }) => {
           },
           items: items,
           turnstileToken: turnstileToken,
-          voucherCode: appliedVoucher ? appliedVoucher.code : undefined
+          voucherCode: appliedVoucher ? appliedVoucher.code : undefined,
+          shippingFee: deliveryCost
         }),
       });
 
@@ -293,7 +338,18 @@ export const OrderForm = ({ onSuccess }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Titik Lokasi Pengiriman (Opsional)</label>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="block text-sm font-semibold text-slate-700">Titik Lokasi Pengiriman <span className="text-rose-500">*</span></label>
+                <button
+                  type="button"
+                  onClick={handleGetCurrentLocation}
+                  disabled={isLocating}
+                  className="flex items-center gap-1.5 text-xs font-bold text-lime-700 bg-lime-100 hover:bg-lime-200 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  <Navigation size={14} className={isLocating ? "animate-pulse" : ""} />
+                  {isLocating ? 'Mencari...' : 'Gunakan Lokasi Saat Ini'}
+                </button>
+              </div>
               <div className="h-64 w-full rounded-xl overflow-hidden border border-slate-200 relative z-0">
                 <MapContainer
                   center={[-7.394801, 109.344261]}
@@ -385,14 +441,26 @@ export const OrderForm = ({ onSuccess }) => {
             <span>- Rp {appliedVoucher.amount.toLocaleString('id-ID')}</span>
           </div>
         )}
+        {formData.order_type === 'delivery' && mapPosition && (
+          <div className="flex justify-between items-center text-slate-700 text-sm border-b border-lime-100/50 pb-2">
+            <span>Ongkos Kirim</span>
+            <span>Rp {deliveryCost.toLocaleString('id-ID')}</span>
+          </div>
+        )}
         <div className="flex justify-between items-center text-lime-900">
           <span className="font-semibold text-sm uppercase tracking-wider">Total Pesanan</span>
-          <span className="text-xl font-bold">Rp {Math.max(0, getTotal() - (appliedVoucher?.amount || 0)).toLocaleString('id-ID')}</span>
+          <span className="text-xl font-bold">Rp {totalWithDelivery.toLocaleString('id-ID')}</span>
         </div>
       </div>
 
+      {isDistanceTooFar && (
+        <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl text-rose-600 text-sm">
+          Lokasi pengiriman terlalu jauh (maksimal 10 km). Silakan pilih lokasi yang lebih dekat atau pilih Ambil Sendiri.
+        </div>
+      )}
+
       <button
-        disabled={loading}
+        disabled={loading || isDistanceTooFar}
         type="submit"
         className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-lime-600 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
       >

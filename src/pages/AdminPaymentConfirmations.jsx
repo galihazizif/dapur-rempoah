@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, CreditCard, CheckCircle2, XCircle, Search, Clock, Calendar, MessageSquare, AlertCircle, ShoppingBag, Package, Eye, Ticket } from 'lucide-react';
 import { clsx } from 'clsx';
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 
 export function AdminPaymentConfirmations() {
   const [confirmations, setConfirmations] = useState([]);
@@ -10,9 +10,7 @@ export function AdminPaymentConfirmations() {
   const [searchTerm, setSearchTerm] = useState('');
   
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787';
-  const [adminToken, setAdminToken] = useState(localStorage.getItem('admin_token') || '');
-  const [showLogin, setShowLogin] = useState(!localStorage.getItem('admin_token'));
-  const [password, setPassword] = useState('');
+  const { adminToken, setShowLogin } = useOutletContext();
 
   const fetchConfirmations = async () => {
     try {
@@ -41,12 +39,6 @@ export function AdminPaymentConfirmations() {
     }
   }, [adminToken]);
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    localStorage.setItem('admin_token', password);
-    setAdminToken(password);
-    setShowLogin(false);
-  };
 
   const handleUpdateStatus = async (id, status, validity) => {
     try {
@@ -69,40 +61,6 @@ export function AdminPaymentConfirmations() {
     c.notes.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (showLogin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 border border-slate-100 animate-in fade-in zoom-in duration-300">
-          <div className="mb-8 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-slate-900 flex items-center justify-center text-white mx-auto mb-4">
-              <CreditCard size={32} />
-            </div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Admin Dapur Rempoah</h1>
-            <p className="text-slate-500 mt-2">Masuk untuk mengelola pembayaran.</p>
-          </div>
-          
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Kata Sandi</label>
-              <input 
-                required
-                type="password" 
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-bold text-slate-900 text-center"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <button 
-              type="submit"
-              className="w-full bg-lime-600 hover:bg-lime-700 text-white px-6 py-4 rounded-2xl font-bold transition-all shadow-lg"
-            >
-              Masuk
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -115,28 +73,7 @@ export function AdminPaymentConfirmations() {
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">Konfirmasi Pembayaran</h1>
           </div>
         </div>
-        <div className="flex gap-3" style={{"overflow-x": "auto"}}>
-          <Link 
-            to="/admin"
-            className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-sm"
-          >
-            <Package size={20} />
-            Produk
-          </Link>
-          <Link 
-            to="/admin/orders"
-            className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-sm"
-          >
-            <ShoppingBag size={20} />
-            Pesanan
-          </Link>
-          <Link 
-            to="/admin/vouchers"
-            className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-sm"
-          >
-            <Ticket size={20} />
-            Voucher
-          </Link>
+        <div className="flex gap-3" style={{overflowX: "auto"}}>
         </div>
       </div>
 

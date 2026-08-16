@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS orders (
   customer_address TEXT NOT NULL,
   total_amount INTEGER NOT NULL,
   status TEXT DEFAULT 'pending',
+  customer_id TEXT,
   payment_method TEXT DEFAULT 'qris',
   payment_status TEXT DEFAULT 'unpaid',
   voucher_code TEXT,
@@ -68,4 +69,20 @@ CREATE TABLE IF NOT EXISTS payment_confirmations (
   image_url TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (order_id) REFERENCES orders(id)
+);
+
+CREATE TABLE IF NOT EXISTS customers (
+  id TEXT PRIMARY KEY,
+  google_id TEXT UNIQUE NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  picture TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS customer_sessions (
+  token TEXT PRIMARY KEY,
+  customer_id TEXT NOT NULL,
+  expires_at DATETIME NOT NULL,
+  FOREIGN KEY (customer_id) REFERENCES customers(id)
 );

@@ -342,12 +342,23 @@ export default {
         calculatedTotal = calculatedTotal - discountAmount + shippingFeeAmount;
         if (calculatedTotal < 0) calculatedTotal = 0;
 
+        // Add optional customer context
+        const authHeader = request.headers.get("Authorization");
+        let sessionCustomerId = null;
+        if (authHeader && authHeader.startsWith("Bearer ")) {
+           const token = authHeader.split(" ")[1];
+           const session = await env.DB.prepare("SELECT customer_id FROM customer_sessions WHERE token = ? AND expires_at > datetime('now')").bind(token).first();
+           if (session) {
+              sessionCustomerId = session.customer_id;
+           }
+        }
+
         // Insert order summary
         statements.push(
           env.DB.prepare(`
-            INSERT INTO orders (id, hash, customer_name, customer_phone, customer_address, total_amount, status, payment_method, payment_status, voucher_code, discount_amount, order_type, pickup_delivery_date, pickup_delivery_time, shipping_fee)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          `).bind(orderId, orderHash, customer.name, customer.phone, customer.address, calculatedTotal, 'pending', 'qris', 'unpaid', voucherCode ? voucherCode.trim().toUpperCase() : null, discountAmount, order_type, pickup_delivery_date, pickup_delivery_time, shippingFeeAmount)
+            INSERT INTO orders (id, hash, customer_name, customer_phone, customer_address, total_amount, status, payment_method, payment_status, voucher_code, discount_amount, order_type, pickup_delivery_date, pickup_delivery_time, shipping_fee, customer_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).bind(orderId, orderHash, customer.name, customer.phone, customer.address, calculatedTotal, 'pending', 'qris', 'unpaid', voucherCode ? voucherCode.trim().toUpperCase() : null, discountAmount, order_type, pickup_delivery_date, pickup_delivery_time, shippingFeeAmount, sessionCustomerId)
         );
 
         if (appliedVoucher) {
@@ -768,8 +779,55 @@ export default {
     if (url.pathname === "/admin/orders" && request.method === "GET") {
       if (!checkAuth()) return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 401, headers: corsHeaders });
       try {
-        const { results } = await env.DB.prepare("SELECT * FROM orders ORDER BY created_at DESC").all();
-        return new Response(JSON.stringify(results), { headers: corsHeaders });
+        const page = parseInt(url.searchParams.get("page") || "1");
+        const limit = parseInt(url.searchParams.get("limit") || "10");
+        const search = url.searchParams.get("search") || "";
+        const status = url.searchParams.get("status") || "all";
+        const payment_status = url.searchParams.get("payment_status") || "all";
+
+        const offset = (page - 1) * limit;
+
+        let whereClauses = [];
+        let params = [];
+
+        if (search) {
+          whereClauses.push("(id LIKE ? OR customer_name LIKE ? OR customer_phone LIKE ?)");
+          const searchPattern = `%${search}%`;
+          params.push(searchPattern, searchPattern, searchPattern);
+        }
+
+        if (status && status !== 'all') {
+          whereClauses.push("status = ?");
+          params.push(status);
+        }
+
+        if (payment_status && payment_status !== 'all') {
+          whereClauses.push("payment_status = ?");
+          params.push(payment_status);
+        }
+
+        const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+
+        // Total count
+        const countQuery = `SELECT COUNT(*) as count FROM orders ${whereSql}`;
+        const countResult = await env.DB.prepare(countQuery).bind(...params).first();
+        const total = countResult ? countResult.count : 0;
+        const totalPages = Math.ceil(total / limit);
+
+        // Paginated results
+        const dataQuery = `SELECT * FROM orders ${whereSql} ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+        const { results } = await env.DB.prepare(dataQuery).bind(...params, limit, offset).all();
+
+        return new Response(JSON.stringify({
+          success: true,
+          data: results,
+          pagination: {
+            total,
+            page,
+            limit,
+            totalPages
+          }
+        }), { headers: corsHeaders });
       } catch (error) {
         return new Response(JSON.stringify({ success: false, message: error.message }), { status: 500, headers: corsHeaders });
       }
@@ -851,6 +909,110 @@ export default {
         await env.DB.batch(statements);
 
         return new Response(JSON.stringify({ success: true, message: "Order updated" }), { headers: corsHeaders });
+      } catch (error) {
+        return new Response(JSON.stringify({ success: false, message: error.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    if (url.pathname === "/auth/google" && request.method === "POST") {
+      try {
+        const { credential } = await request.json();
+        const verifyRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
+        const verifyData = await verifyRes.json();
+        
+        if (!verifyRes.ok || !verifyData.sub) {
+          return new Response(JSON.stringify({ success: false, message: "Invalid Google token" }), { status: 401, headers: corsHeaders });
+        }
+        
+        const google_id = verifyData.sub;
+        const email = verifyData.email;
+        const name = verifyData.name;
+        const picture = verifyData.picture;
+        const customer_id = `CUS${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+        
+        const existing = await env.DB.prepare("SELECT id FROM customers WHERE google_id = ?").bind(google_id).first();
+        let finalId = existing ? existing.id : customer_id;
+        
+        if (!existing) {
+          await env.DB.prepare("INSERT INTO customers (id, google_id, email, name, picture) VALUES (?, ?, ?, ?, ?)").bind(finalId, google_id, email, name, picture).run();
+        } else {
+          await env.DB.prepare("UPDATE customers SET name = ?, picture = ? WHERE id = ?").bind(name, picture, finalId).run();
+        }
+        
+        const sessionToken = crypto.randomUUID();
+        const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        await env.DB.prepare("INSERT INTO customer_sessions (token, customer_id, expires_at) VALUES (?, ?, ?)").bind(sessionToken, finalId, expiresAt).run();
+        
+        return new Response(JSON.stringify({ success: true, token: sessionToken, customer: { id: finalId, name, email, picture } }), { headers: corsHeaders });
+      } catch (error) {
+         return new Response(JSON.stringify({ success: false, message: error.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    if (url.pathname === "/auth/me" && request.method === "GET") {
+      const authHeader = request.headers.get("Authorization");
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      }
+      const token = authHeader.split(" ")[1];
+      try {
+        const session = await env.DB.prepare("SELECT c.id, c.name, c.email, c.picture FROM customers c JOIN customer_sessions s ON c.id = s.customer_id WHERE s.token = ? AND s.expires_at > datetime('now')").bind(token).first();
+        if (!session) {
+          return new Response(JSON.stringify({ success: false, message: "Session expired or invalid" }), { status: 401, headers: corsHeaders });
+        }
+        return new Response(JSON.stringify({ success: true, customer: session }), { headers: corsHeaders });
+      } catch (error) {
+        return new Response(JSON.stringify({ success: false, message: error.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    if (url.pathname === "/admin/orders" && request.method === "POST") {
+      if (!checkAuth()) return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      try {
+        const { customer, items, shippingFee = 0, additionalFee = 0 } = await request.json();
+        const { name, phone = '', address = '', order_type = 'delivery', pickup_delivery_date, pickup_delivery_time } = customer;
+        
+        const orderId = generateFriendlyId('ORD');
+        const orderHash = Math.random().toString(36).substring(2, 12);
+        
+        let calculatedTotal = 0;
+        const verifiedItems = [];
+        const statements = [];
+        
+        const productIds = items.map(item => item.id || item.product_id);
+        const { results: dbProducts } = await env.DB.prepare(`
+          SELECT * FROM products WHERE id IN (${productIds.map(() => '?').join(',')})
+        `).bind(...productIds).all();
+
+        for (const item of items) {
+          const menuProduct = dbProducts.find(p => p.id === (item.id || item.product_id));
+          if (!menuProduct) throw new Error(`Product not found`);
+          const quantity = parseInt(item.quantity);
+          calculatedTotal += menuProduct.price * quantity;
+          verifiedItems.push({ ...item, name: menuProduct.name, price: menuProduct.price, quantity });
+        }
+        
+        calculatedTotal += Number(shippingFee) + Number(additionalFee);
+        
+        statements.push(
+          env.DB.prepare(`
+            INSERT INTO orders (id, hash, customer_name, customer_phone, customer_address, total_amount, status, payment_method, payment_status, order_type, pickup_delivery_date, pickup_delivery_time, shipping_fee, additional_fee)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).bind(orderId, orderHash, name, phone, address, calculatedTotal, 'pending', 'qris', 'unpaid', order_type, pickup_delivery_date || null, pickup_delivery_time || null, shippingFee, additionalFee)
+        );
+
+        for (const item of verifiedItems) {
+          statements.push(
+             env.DB.prepare(`
+              INSERT INTO order_items (order_id, product_id, product_name, price, quantity)
+              VALUES (?, ?, ?, ?, ?)
+             `).bind(orderId, item.id || item.product_id, item.name, item.price, item.quantity)
+          );
+        }
+        
+        await env.DB.batch(statements);
+        
+        return new Response(JSON.stringify({ success: true, message: "Order created successfully", orderId }), { status: 201, headers: corsHeaders });
       } catch (error) {
         return new Response(JSON.stringify({ success: false, message: error.message }), { status: 500, headers: corsHeaders });
       }

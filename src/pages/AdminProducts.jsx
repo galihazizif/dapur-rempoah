@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, MoreVertical, CheckCircle2, XCircle, ChevronLeft, Package, Search, CreditCard, ShoppingBag, Ticket } from 'lucide-react';
 import { clsx } from 'clsx';
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 
 export function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -22,9 +22,7 @@ export function AdminProducts() {
   });
 
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787';
-  const [adminToken, setAdminToken] = useState(localStorage.getItem('admin_token') || '');
-  const [showLogin, setShowLogin] = useState(!localStorage.getItem('admin_token'));
-  const [password, setPassword] = useState('');
+  const { adminToken, setShowLogin } = useOutletContext();
 
   const fetchProducts = async () => {
     try {
@@ -58,19 +56,6 @@ export function AdminProducts() {
     document.addEventListener('click', handleClick);
     return () => document.removeEventListener('click', handleClick);
   }, []);
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-    localStorage.setItem('admin_token', password);
-    setAdminToken(password);
-    setShowLogin(false);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('admin_token');
-    setAdminToken('');
-    setShowLogin(true);
-  };
 
   const handleToggleAvailable = async (product) => {
     try {
@@ -172,43 +157,7 @@ export function AdminProducts() {
     p.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (showLogin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 border border-slate-100 animate-in fade-in zoom-in duration-300">
-          <div className="mb-8 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-slate-900 flex items-center justify-center text-white mx-auto mb-4">
-              <Package size={32} />
-            </div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Admin Dapur Rempoah</h1>
-            <p className="text-slate-500 mt-2">Silakan masukkan kata sandi admin untuk melanjutkan.</p>
-          </div>
-          
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Kata Sandi</label>
-              <input 
-                required
-                type="password" 
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-bold text-slate-900 text-center tracking-widest"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <button 
-              type="submit"
-              className="w-full bg-lime-600 hover:bg-lime-700 text-white px-6 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-lime-200"
-            >
-              Masuk
-            </button>
-            <Link to="/" className="block text-center text-sm font-bold text-slate-400 hover:text-slate-600 transition-all pt-2">
-              Kembali ke Beranda
-            </Link>
-          </form>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -218,8 +167,6 @@ export function AdminProducts() {
             <Link to="/" className="text-sm text-slate-500 hover:text-lime-600 flex items-center gap-1">
               <ChevronLeft size={16} /> Kembali
             </Link>
-            <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-            <button onClick={handleLogout} className="text-sm text-rose-500 font-bold hover:text-rose-600">Logout</button>
           </div>
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-white">
@@ -228,28 +175,7 @@ export function AdminProducts() {
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">Kelola Produk</h1>
           </div>
         </div>
-        <div className="flex gap-3" style={{"overflow-x": "auto"}}>
-          <Link 
-            to="/admin/orders"
-            className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-sm"
-          >
-            <ShoppingBag size={20} />
-            Pesanan
-          </Link>
-          <Link 
-            to="/admin/payments"
-            className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-sm"
-          >
-            <CreditCard size={20} />
-            Konfirmasi Pembayaran
-          </Link>
-          <Link 
-            to="/admin/vouchers"
-            className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-sm"
-          >
-            <Ticket size={20} />
-            Voucher
-          </Link>
+        <div className="flex gap-3" style={{overflowX: "auto"}}>
           <button 
             onClick={() => handleOpenModal()}
             className="bg-lime-600 hover:bg-lime-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-lime-200"

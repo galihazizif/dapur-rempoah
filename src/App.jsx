@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { CartDrawer } from './components/CartDrawer';
 import { CheckoutModal } from './components/CheckoutModal';
@@ -13,16 +13,21 @@ import { AdminPaymentConfirmations } from './pages/AdminPaymentConfirmations';
 import { AdminOrders } from './pages/AdminOrders';
 import { AdminVouchers } from './pages/AdminVouchers';
 import { AdminSettings } from './pages/AdminSettings';
+import { AdminLayout } from './components/AdminLayout';
 import { OneSignalSetup } from './components/OneSignalSetup';
 import { useSettingsStore } from './store/useSettingsStore';
 import { useEffect } from 'react';
 import waLogo from './assets/wa_icon.png';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { TermsAndConditions } from './pages/TermsAndConditions';
 
 function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const { menu, loading, error } = useMenu();
   const { fetchSettings } = useSettingsStore();
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
 
   useEffect(() => {
     fetchSettings();
@@ -36,7 +41,7 @@ function App() {
   return (
     <div className="min-h-screen bg-slate-50">
       <OneSignalSetup />
-      <Navbar onCartClick={() => setIsCartOpen(true)} />
+      {!isAdminRoute && <Navbar onCartClick={() => setIsCartOpen(true)} />}
 
       <Routes>
         <Route
@@ -53,15 +58,20 @@ function App() {
         <Route path="/confirm-payment/:hash" element={<PaymentConfirmation />} />
         <Route path="/confirm-payment" element={<PaymentConfirmation />} />
         <Route path="/history" element={<OrderHistory />} />
-        <Route path="/admin" element={<AdminProducts />} />
-        <Route path="/admin/payments" element={<AdminPaymentConfirmations />} />
-        <Route path="/admin/orders" element={<AdminOrders />} />
-        <Route path="/admin/vouchers" element={<AdminVouchers />} />
-        <Route path="/admin/settings" element={<AdminSettings />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminProducts />} />
+          <Route path="payments" element={<AdminPaymentConfirmations />} />
+          <Route path="orders" element={<AdminOrders />} />
+          <Route path="vouchers" element={<AdminVouchers />} />
+          <Route path="settings" element={<AdminSettings />} />
+        </Route>
       </Routes>
 
-      <footer className="bg-white border-t border-slate-200 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {!isAdminRoute && (
+        <footer className="bg-white border-t border-slate-200 py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div>
               <h3 className="text-xl font-bold text-black mb-4">
@@ -75,8 +85,8 @@ function App() {
               <h4 className="font-bold text-slate-900 mb-4">Navigasi</h4>
               <ul className="space-y-2 text-slate-500">
                 <li><a href="/#menu" className="hover:text-lime-600 transition-colors">Menu</a></li>
-                <li><a href="#" className="hover:text-lime-600 transition-colors">Tentang Kami</a></li>
-                <li><a href="#" className="hover:text-lime-600 transition-colors">Promo</a></li>
+                <li><a href="/privacy-policy" className="hover:text-lime-600 transition-colors">Kebijakan Privasi</a></li>
+                <li><a href="/terms-and-conditions" className="hover:text-lime-600 transition-colors">Syarat & Ketentuan</a></li>
               </ul>
             </div>
             <div>
@@ -93,6 +103,7 @@ function App() {
           </div>
         </div>
       </footer>
+      )}
 
       {/* Overlays */}
       <CartDrawer

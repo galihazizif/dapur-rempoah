@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Send, Phone, User, MapPin, CheckCircle2, Calendar, Clock, Truck, Store, Navigation } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
+import { useAuthStore } from '../store/useAuthStore';
 import { Turnstile } from '@marsidev/react-turnstile';
 import { haversineDistance } from '../lib/utils';
 
@@ -45,6 +46,7 @@ function LocationMarker({ position, setPosition, onPositionSelected }) {
 export const OrderForm = ({ onSuccess }) => {
   const navigate = useNavigate();
   const { items, getTotal, clearCart } = useCartStore();
+  const { token: customerToken } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState(null);
@@ -163,11 +165,13 @@ export const OrderForm = ({ onSuccess }) => {
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
+      const orderHeaders = { 'Content-Type': 'application/json' };
+      if (customerToken) {
+        orderHeaders['Authorization'] = `Bearer ${customerToken}`;
+      }
       const response = await fetch(`${apiUrl}/orders`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: orderHeaders,
         body: JSON.stringify({
           customer: {
             ...formData,

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, CreditCard, ShoppingBag, Ticket, Settings, LogOut, ShieldCheck, ChevronRight, Menu, X } from 'lucide-react';
+import { Package, CreditCard, ShoppingBag, Ticket, Settings, LogOut, ShieldCheck, ChevronRight, Menu, X, Users } from 'lucide-react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 
 export function AdminLayout() {
@@ -68,6 +68,7 @@ export function AdminLayout() {
   const menuItems = [
     { name: 'Produk', path: '/admin', icon: <Package size={20} /> },
     { name: 'Pesanan', path: '/admin/orders', icon: <ShoppingBag size={20} /> },
+    { name: 'Pelanggan', path: '/admin/customers', icon: <Users size={20} /> },
     { name: 'Konfirmasi Pembayaran', path: '/admin/payments', icon: <CreditCard size={20} /> },
     { name: 'Voucher', path: '/admin/vouchers', icon: <Ticket size={20} /> },
     { name: 'Pengaturan', path: '/admin/settings', icon: <Settings size={20} /> },

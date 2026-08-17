@@ -10,6 +10,7 @@ export function AdminOrders() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterPayment, setFilterPayment] = useState('all');
+  const [filterRegistered, setFilterRegistered] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -23,7 +24,7 @@ export function AdminOrders() {
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787';
   const { adminToken, setShowLogin } = useOutletContext();
 
-  const fetchOrders = async (page = currentPage, search = searchTerm, status = filterStatus, payment = filterPayment) => {
+  const fetchOrders = async (page = currentPage, search = searchTerm, status = filterStatus, payment = filterPayment, registered = filterRegistered) => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -31,7 +32,8 @@ export function AdminOrders() {
         limit: itemsPerPage.toString(),
         search: search.trim(),
         status: status,
-        payment_status: payment
+        payment_status: payment,
+        registered: registered
       });
       const response = await fetch(`${apiUrl}/admin/orders?${params.toString()}`, {
         headers: {
@@ -63,9 +65,9 @@ export function AdminOrders() {
 
   useEffect(() => {
     if (adminToken) {
-      fetchOrders(currentPage, searchTerm, filterStatus, filterPayment);
+      fetchOrders(currentPage, searchTerm, filterStatus, filterPayment, filterRegistered);
     }
-  }, [adminToken, currentPage, searchTerm, filterStatus, filterPayment]);
+  }, [adminToken, currentPage, searchTerm, filterStatus, filterPayment, filterRegistered]);
 
   const handleUpdateOrder = async (id, status, payment_status, shipping_fee, additional_fee) => {
     try {
@@ -184,7 +186,7 @@ export function AdminOrders() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterStatus, filterPayment]);
+  }, [searchTerm, filterStatus, filterPayment, filterRegistered]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -264,6 +266,15 @@ export function AdminOrders() {
               <option value="confirmation">Konfirmasi</option>
               <option value="paid">Terbayar</option>
             </select>
+            <select
+              value={filterRegistered}
+              onChange={(e) => setFilterRegistered(e.target.value)}
+              className="bg-white border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-lime-500 text-sm font-bold text-slate-700"
+            >
+              <option value="all">Semua Pelanggan</option>
+              <option value="registered">Pelanggan Terdaftar</option>
+              <option value="guest">Tamu</option>
+            </select>
           </div>
         </div>
 
@@ -296,6 +307,11 @@ export function AdminOrders() {
                     <div className="flex flex-col gap-0.5">
                       <p className="font-bold text-slate-900 text-sm flex items-center gap-1">
                         <User size={12} className="text-slate-400" /> {order.customer_name}
+                        {order.customer_id && (
+                          <span className="text-[9px] font-black uppercase tracking-widest bg-lime-50 text-lime-700 border border-lime-100 px-1.5 py-0.5 rounded-md ml-1">
+                            Terdaftar
+                          </span>
+                        )}
                       </p>
                       <p className="text-xs text-slate-500 flex items-center gap-1">
                         <Phone size={10} className="text-slate-400" /> {order.customer_phone}

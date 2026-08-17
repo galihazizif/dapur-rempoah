@@ -11,6 +11,7 @@ import { AdminProducts } from './pages/AdminProducts';
 import { PaymentConfirmation } from './pages/PaymentConfirmation';
 import { AdminPaymentConfirmations } from './pages/AdminPaymentConfirmations';
 import { AdminOrders } from './pages/AdminOrders';
+import { AdminCustomers } from './pages/AdminCustomers';
 import { AdminVouchers } from './pages/AdminVouchers';
 import { AdminSettings } from './pages/AdminSettings';
 import { AdminLayout } from './components/AdminLayout';
@@ -64,6 +65,7 @@ function App() {
           <Route index element={<AdminProducts />} />
           <Route path="payments" element={<AdminPaymentConfirmations />} />
           <Route path="orders" element={<AdminOrders />} />
+          <Route path="customers" element={<AdminCustomers />} />
           <Route path="vouchers" element={<AdminVouchers />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>

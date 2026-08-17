@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, Package, Clock, CreditCard, CheckCircle2, MessageCircle, Ticket, XCircle, ShieldCheck, User } from 'lucide-react';
+import { ChevronLeft, Package, Clock, CreditCard, CheckCircle2, MessageCircle, Ticket, XCircle, ShieldCheck, User, Printer, Settings } from 'lucide-react';
 import { clsx } from 'clsx';
 import { convertToDynamicQRIS } from '../lib/utils';
 import { QRCode } from 'react-qr-code';
@@ -18,6 +18,13 @@ export function OrderDetail() {
   const [editingItems, setEditingItems] = useState(null);
   const [availableProducts, setAvailableProducts] = useState([]);
   const [saving, setSaving] = useState(false);
+
+  // Print / receipt state
+  const [printEndpoint, setPrintEndpoint] = useState(() => localStorage.getItem('print_endpoint') || '');
+  const [showPrintConfig, setShowPrintConfig] = useState(false);
+  const [printEndpointInput, setPrintEndpointInput] = useState('');
+  const [printing, setPrinting] = useState(false);
+  const [printError, setPrintError] = useState(null);
 
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787';
   const staticQris = import.meta.env.VITE_QRIS_STATIC || null;
@@ -112,6 +119,87 @@ export function OrderDetail() {
     } finally {
       setSaving(false);
     }
+  };
+
+  // --- Print / Receipt ---
+
+  const buildPrintPayload = () => {
+    const { order, items } = orderData;
+    const itemsSubtotal = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    const fmt = (n) => n.toLocaleString('id-ID');
+
+    const content = [
+      { type: 'text', text: 'DAPUR REMPOAH', align: 'center', bold: true, size: 'large' },
+      { type: 'text', text: 'Babakan, Purbalingga', align: 'center' },
+      { type: 'text', text: '', align: 'center' },
+      { type: 'divider' },
+      { type: 'row', left: 'ORDER', right: `#${order.id}`, bold: false },
+      { type: 'row', left: 'Jam', right: order.created_at },
+      { type: 'divider' },
+      ...items.map(item => ({
+        type: 'row',
+        left: `${item.product_name} x${item.quantity}`,
+        right: fmt(item.price * item.quantity)
+      })),
+      { type: 'divider' },
+      { type: 'row', left: 'Subtotal', right: fmt(itemsSubtotal) },
+    ];
+
+    if (order.voucher_code) {
+      content.push({ type: 'row', left: `Diskon (${order.voucher_code})`, right: `-${fmt(order.discount_amount || 0)}` });
+    }
+    if (order.shipping_fee > 0) {
+      content.push({ type: 'row', left: 'Ongkir', right: fmt(order.shipping_fee) });
+    }
+
+    content.push(
+      { type: 'row', left: 'TOTAL', right: fmt(order.total_amount), bold: true },
+      { type: 'text', text: 'Terima kasih!', align: 'center' },
+      { type: 'feed' },
+    );
+
+    return { cut: true, content };
+  };
+
+  const sendToPrinter = async () => {
+    if (!printEndpoint) return;
+    setPrinting(true);
+    setPrintError(null);
+    try {
+      const response = await fetch(printEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(buildPrintPayload()),
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || `HTTP ${response.status}`);
+      }
+      alert('Struk berhasil dikirim ke printer.');
+    } catch (err) {
+      setPrintError('Gagal mengirim struk: ' + err.message);
+    } finally {
+      setPrinting(false);
+    }
+  };
+
+  const handlePrint = () => {
+    if (!printEndpoint) {
+      setPrintEndpointInput('');
+      setShowPrintConfig(true);
+      return;
+    }
+    sendToPrinter();
+  };
+
+  const handleSavePrintEndpoint = async () => {
+    const endpoint = printEndpointInput.trim();
+    if (!endpoint) return;
+    localStorage.setItem('print_endpoint', endpoint);
+    setPrintEndpoint(endpoint);
+    setShowPrintConfig(false);
+    setPrintError(null);
+    sendToPrinter();
   };
 
   // --- Status helpers ---
@@ -209,6 +297,37 @@ export function OrderDetail() {
         <div className="mb-4 flex items-center gap-2 text-xs font-bold text-slate-500 bg-slate-100 px-3 py-2 rounded-xl w-fit">
           <ShieldCheck size={14} className="text-lime-600" />
           Mode Admin — kontrol tersedia di bawah
+        </div>
+      )}
+
+      {/* Print / receipt bar (admin only) */}
+      {adminToken && orderData && (
+        <div className="mb-4 flex flex-wrap items-center gap-3 bg-white border border-slate-100 rounded-2xl p-3">
+          <button
+            onClick={handlePrint}
+            disabled={printing}
+            className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-lime-600 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            <Printer size={16} />
+            {printing ? 'Mengirim...' : 'Cetak Struk'}
+          </button>
+          <button
+            onClick={() => {
+              setPrintEndpointInput(printEndpoint);
+              setShowPrintConfig(true);
+            }}
+            className="flex items-center gap-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-2.5 rounded-xl transition-colors"
+            title="Konfigurasi endpoint printer"
+          >
+            <Settings size={14} />
+            {printEndpoint ? 'Ubah Endpoint' : 'Atur Endpoint'}
+          </button>
+          {printEndpoint && (
+            <span className="text-xs text-slate-400 font-medium break-all max-w-full sm:max-w-xs">
+              {printEndpoint}
+            </span>
+          )}
+          {printError && <span className="text-xs font-bold text-rose-600">{printError}</span>}
         </div>
       )}
 
@@ -619,6 +738,44 @@ export function OrderDetail() {
                 className="flex-1 px-4 py-3 bg-lime-600 text-white font-bold rounded-xl hover:bg-lime-700 transition-colors shadow-md disabled:opacity-50"
               >
                 {saving ? 'Menyimpan...' : 'Simpan Items'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Print endpoint config modal */}
+      {showPrintConfig && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-xl">
+            <h3 className="text-lg font-black text-slate-900 mb-4 flex items-center gap-2">
+              <Printer className="text-lime-600" size={20} />
+              Konfigurasi Endpoint Printer
+            </h3>
+            <p className="text-xs text-slate-500 mb-4">
+              Struk akan dikirim langsung dari browser ke endpoint REST printer ini. Disimpan di localStorage browser ini.
+            </p>
+            <label className="block text-xs font-bold text-slate-500 mb-1">Endpoint URL</label>
+            <input
+              type="url"
+              value={printEndpointInput}
+              onChange={(e) => setPrintEndpointInput(e.target.value)}
+              placeholder="https://example.com/api/print"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-lime-500 outline-none font-bold text-slate-700"
+            />
+            <div className="flex gap-3 mt-8">
+              <button
+                onClick={() => setShowPrintConfig(false)}
+                className="flex-1 px-4 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleSavePrintEndpoint}
+                disabled={!printEndpointInput.trim()}
+                className="flex-1 px-4 py-3 bg-lime-600 text-white font-bold rounded-xl hover:bg-lime-700 transition-colors shadow-md disabled:opacity-50"
+              >
+                Simpan & Cetak
               </button>
             </div>
           </div>

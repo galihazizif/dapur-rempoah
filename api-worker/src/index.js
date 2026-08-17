@@ -446,7 +446,10 @@ export default {
 
         // Get order details
         const order = await env.DB.prepare(`
-          SELECT * FROM orders WHERE hash = ?
+          SELECT o.*, c.name AS account_name, c.email AS customer_email
+          FROM orders o
+          LEFT JOIN customers c ON c.id = o.customer_id
+          WHERE o.hash = ?
         `).bind(hash).first();
 
         if (!order) {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, Package, Clock, CreditCard, CheckCircle2, MessageCircle, Ticket, XCircle, ShieldCheck } from 'lucide-react';
+import { ChevronLeft, Package, Clock, CreditCard, CheckCircle2, MessageCircle, Ticket, XCircle, ShieldCheck, User } from 'lucide-react';
 import { clsx } from 'clsx';
 import { convertToDynamicQRIS } from '../lib/utils';
 import { QRCode } from 'react-qr-code';
@@ -302,6 +302,22 @@ export function OrderDetail() {
             </div>
           </div>
         </div>
+
+        {/* Registered customer section */}
+        {order.customer_id && (
+          <div className="px-6 sm:px-8 py-4 bg-lime-50/60 border-b border-lime-100 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-lime-600 shadow-sm border border-lime-100">
+                <User size={18} />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-lime-700 uppercase tracking-widest">Pelanggan Terdaftar</p>
+                <p className="font-bold text-slate-900">{order.account_name || order.customer_name}</p>
+                {order.customer_email && <p className="text-xs text-slate-500">{order.customer_email}</p>}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Admin action bar */}
         {adminToken && isEditable && (

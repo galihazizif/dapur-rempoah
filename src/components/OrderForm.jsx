@@ -46,7 +46,7 @@ function LocationMarker({ position, setPosition, onPositionSelected }) {
 export const OrderForm = ({ onSuccess }) => {
   const navigate = useNavigate();
   const { items, getTotal, clearCart } = useCartStore();
-  const { token: customerToken } = useAuthStore();
+  const { token: customerToken, customer } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState(null);
@@ -54,7 +54,11 @@ export const OrderForm = ({ onSuccess }) => {
 
   const [formData, setFormData] = useState(() => {
     const saved = localStorage.getItem('orderFormData');
-    return saved ? JSON.parse(saved) : { name: '', phone: '', address: '', order_type: 'delivery', pickup_delivery_date: '', pickup_delivery_time: '' };
+    const base = saved ? JSON.parse(saved) : { name: '', phone: '', address: '', order_type: 'delivery', pickup_delivery_date: '', pickup_delivery_time: '' };
+    if (customer?.name) {
+      base.name = customer.name;
+    }
+    return base;
   });
 
   const [mapPosition, setMapPosition] = useState(null);
@@ -225,6 +229,14 @@ export const OrderForm = ({ onSuccess }) => {
   useEffect(() => {
     localStorage.setItem('orderFormData', JSON.stringify(formData));
   }, [formData]);
+
+  const appliedCustomerName = useRef(customer?.name);
+  useEffect(() => {
+    if (customer?.name && customer.name !== appliedCustomerName.current) {
+      appliedCustomerName.current = customer.name;
+      setFormData(prev => ({ ...prev, name: customer.name }));
+    }
+  }, [customer?.name]);
 
   if (done) {
     return (

@@ -19,7 +19,7 @@ export function AdminOrders() {
   const [availableProducts, setAvailableProducts] = useState([]);
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [newOrderForm, setNewOrderForm] = useState({ name: '', phone: '', address: '', order_type: 'delivery', items: [], shippingFee: '', additionalFee: '' });
-  
+
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787';
   const { adminToken, setShowLogin } = useOutletContext();
 
@@ -75,7 +75,7 @@ export function AdminOrders() {
 
       const response = await fetch(`${apiUrl}/admin/orders/${id}`, {
         method: 'PUT',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${adminToken}`
         },
@@ -219,8 +219,8 @@ export function AdminOrders() {
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">Kelola Pesanan</h1>
           </div>
         </div>
-        <div className="flex gap-3" style={{overflowX: "auto"}}>
-          <button 
+        <div className="flex gap-3" style={{ overflowX: "auto" }}>
+          <button
             onClick={handleOpenCreateOrder}
             className="flex items-center gap-2 bg-lime-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-lime-700 transition-colors shadow-sm whitespace-nowrap"
           >
@@ -233,16 +233,16 @@ export function AdminOrders() {
         <div className="p-4 border-b border-slate-50 flex flex-col sm:flex-row items-center gap-4 bg-slate-50/50">
           <div className="flex items-center gap-2 w-full sm:w-auto flex-1">
             <Search className="text-slate-400" size={20} />
-            <input 
-              type="text" 
-              placeholder="Cari ID, nama pelanggan, atau telepon..." 
+            <input
+              type="text"
+              placeholder="Cari ID, nama pelanggan, atau telepon..."
               className="bg-transparent border-none outline-none w-full font-medium text-slate-600"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <select 
+            <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
               className="bg-white border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-lime-500 text-sm font-bold text-slate-700"
@@ -254,7 +254,7 @@ export function AdminOrders() {
               <option value="complete">Selesai</option>
               <option value="cancelled">Batal</option>
             </select>
-            <select 
+            <select
               value={filterPayment}
               onChange={(e) => setFilterPayment(e.target.value)}
               className="bg-white border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-lime-500 text-sm font-bold text-slate-700"
@@ -314,7 +314,7 @@ export function AdminOrders() {
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    <select 
+                    <select
                       value={order.status}
                       onChange={(e) => handleUpdateOrder(order.id, e.target.value, order.payment_status)}
                       className={clsx(
@@ -330,7 +330,7 @@ export function AdminOrders() {
                     </select>
                   </td>
                   <td className="px-6 py-4">
-                   <select 
+                    <select
                       value={order.payment_status}
                       onChange={(e) => handleUpdateOrder(order.id, order.status, e.target.value)}
                       className={clsx(
@@ -344,9 +344,8 @@ export function AdminOrders() {
                     </select>
                   </td>
                   <td className="px-6 py-4 text-right flex flex-col gap-2 items-end justify-center h-full min-h-[5rem]">
-                    <Link 
+                    <Link
                       to={`/orders/${order.hash}`}
-                      target="_blank"
                       className="text-xs font-bold text-lime-600 hover:underline"
                     >
                       Detail
@@ -373,14 +372,14 @@ export function AdminOrders() {
             </tbody>
           </table>
         </div>
-        
+
         {!loading && totalOrders > 0 && (
           <div className="p-4 border-t border-slate-50/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500 bg-slate-50/30">
             <div>
               Menampilkan <span className="font-bold text-slate-700">{Math.min((currentPage - 1) * itemsPerPage + 1, totalOrders)}</span> hingga <span className="font-bold text-slate-700">{Math.min(currentPage * itemsPerPage, totalOrders)}</span> dari <span className="font-bold text-slate-700">{totalOrders}</span> pesanan
             </div>
             <div className="flex gap-2">
-              <button 
+              <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
                 className="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white font-semibold transition-all shadow-sm"
@@ -390,7 +389,7 @@ export function AdminOrders() {
               <div className="flex items-center px-4 font-bold text-slate-700">
                 Hal {currentPage} dari {totalPages || 1}
               </div>
-              <button 
+              <button
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage >= totalPages || totalPages === 0}
                 className="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white font-semibold transition-all shadow-sm"
@@ -414,10 +413,10 @@ export function AdminOrders() {
                 <label className="block text-xs font-bold text-slate-500 mb-1">Ongkos Kirim</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">Rp</span>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     value={editingFees.shipping_fee}
-                    onChange={e => setEditingFees({...editingFees, shipping_fee: e.target.value === '' ? '' : Number(e.target.value)})}
+                    onChange={e => setEditingFees({ ...editingFees, shipping_fee: e.target.value === '' ? '' : Number(e.target.value) })}
                     className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-lime-500 outline-none font-bold text-slate-700"
                     placeholder="0"
                   />
@@ -427,10 +426,10 @@ export function AdminOrders() {
                 <label className="block text-xs font-bold text-slate-500 mb-1">Biaya Tambahan</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">Rp</span>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     value={editingFees.additional_fee}
-                    onChange={e => setEditingFees({...editingFees, additional_fee: e.target.value === '' ? '' : Number(e.target.value)})}
+                    onChange={e => setEditingFees({ ...editingFees, additional_fee: e.target.value === '' ? '' : Number(e.target.value) })}
                     className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-lime-500 outline-none font-bold text-slate-700"
                     placeholder="0"
                   />
@@ -438,13 +437,13 @@ export function AdminOrders() {
               </div>
             </div>
             <div className="flex gap-3 mt-8">
-              <button 
+              <button
                 onClick={() => setEditingFees(null)}
                 className="flex-1 px-4 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-colors"
               >
                 Batal
               </button>
-              <button 
+              <button
                 onClick={() => {
                   const order = orders.find(o => o.id === editingFees.id);
                   handleUpdateOrder(editingFees.id, order.status, order.payment_status, Number(editingFees.shipping_fee) || 0, Number(editingFees.additional_fee) || 0);
@@ -466,7 +465,7 @@ export function AdminOrders() {
               <Package className="text-lime-600" size={20} />
               Edit Item Pesanan #{editingItems.id}
             </h3>
-            
+
             <div className="overflow-y-auto pr-2 space-y-4 flex-1">
               {editingItems.items.map((item, index) => (
                 <div key={index} className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
@@ -476,22 +475,22 @@ export function AdminOrders() {
                   </div>
                   <div className="flex items-center gap-3 ml-4">
                     <div className="relative w-16">
-                      <input 
-                        type="number" 
+                      <input
+                        type="number"
                         min="1"
                         className="w-full pl-2 pr-2 py-1.5 bg-white border border-slate-200 rounded-lg outline-none text-center font-bold text-sm focus:ring-2 focus:ring-lime-500"
                         value={item.quantity}
                         onChange={(e) => {
                           const newItems = [...editingItems.items];
                           newItems[index].quantity = e.target.value;
-                          setEditingItems({...editingItems, items: newItems});
+                          setEditingItems({ ...editingItems, items: newItems });
                         }}
                       />
                     </div>
-                    <button 
+                    <button
                       onClick={() => {
                         const newItems = editingItems.items.filter((_, i) => i !== index);
-                        setEditingItems({...editingItems, items: newItems});
+                        setEditingItems({ ...editingItems, items: newItems });
                       }}
                       className="text-rose-400 p-1 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                       title="Hapus Item"
@@ -501,10 +500,10 @@ export function AdminOrders() {
                   </div>
                 </div>
               ))}
-              
+
               <div className="mt-6 pt-4 border-t border-slate-100">
                 <label className="block text-xs font-bold text-slate-500 mb-2">Tambah Item Baru</label>
-                <select 
+                <select
                   className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none font-bold text-slate-700 text-sm focus:ring-2 focus:ring-lime-500"
                   onChange={(e) => {
                     const productId = parseInt(e.target.value);
@@ -531,13 +530,13 @@ export function AdminOrders() {
             </div>
 
             <div className="flex gap-3 mt-6 pt-6 border-t border-slate-100 flex-shrink-0">
-              <button 
+              <button
                 onClick={() => setEditingItems(null)}
                 className="flex-1 px-4 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-colors"
               >
                 Batal
               </button>
-              <button 
+              <button
                 onClick={handleSaveItems}
                 disabled={editingItems.items.length === 0}
                 className="flex-1 px-4 py-3 bg-lime-600 text-white font-bold rounded-xl hover:bg-lime-700 transition-colors shadow-md disabled:opacity-50"
@@ -556,20 +555,20 @@ export function AdminOrders() {
               <Plus className="text-lime-600" size={24} />
               Buat Pesanan Baru
             </h3>
-            
+
             <div className="overflow-y-auto pr-2 flex-1 space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1">Nama Pelanggan *</label>
-                  <input type="text" value={newOrderForm.name} onChange={e => setNewOrderForm({...newOrderForm, name: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-lime-500 text-sm font-bold text-slate-700" placeholder="Nama" />
+                  <input type="text" value={newOrderForm.name} onChange={e => setNewOrderForm({ ...newOrderForm, name: e.target.value })} className="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-lime-500 text-sm font-bold text-slate-700" placeholder="Nama" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1">No. HP / WhatsApp *</label>
-                  <input type="text" value={newOrderForm.phone} onChange={e => setNewOrderForm({...newOrderForm, phone: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-lime-500 text-sm font-bold text-slate-700" placeholder="08..." />
+                  <input type="text" value={newOrderForm.phone} onChange={e => setNewOrderForm({ ...newOrderForm, phone: e.target.value })} className="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-lime-500 text-sm font-bold text-slate-700" placeholder="08..." />
                 </div>
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-bold text-slate-500 mb-1">Tipe Pesanan</label>
-                  <select value={newOrderForm.order_type} onChange={e => setNewOrderForm({...newOrderForm, order_type: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-lime-500 text-sm font-bold text-slate-700">
+                  <select value={newOrderForm.order_type} onChange={e => setNewOrderForm({ ...newOrderForm, order_type: e.target.value })} className="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-lime-500 text-sm font-bold text-slate-700">
                     <option value="delivery">Delivery</option>
                     <option value="pickup">Pickup</option>
                   </select>
@@ -577,16 +576,16 @@ export function AdminOrders() {
                 {newOrderForm.order_type === 'delivery' && (
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-bold text-slate-500 mb-1">Alamat (Untuk Delivery)</label>
-                    <textarea rows="2" value={newOrderForm.address} onChange={e => setNewOrderForm({...newOrderForm, address: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-lime-500 text-sm font-bold text-slate-700" placeholder="Alamat lengkap..."></textarea>
+                    <textarea rows="2" value={newOrderForm.address} onChange={e => setNewOrderForm({ ...newOrderForm, address: e.target.value })} className="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-lime-500 text-sm font-bold text-slate-700" placeholder="Alamat lengkap..."></textarea>
                   </div>
                 )}
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1">Ongkos Kirim</label>
-                  <input type="number" value={newOrderForm.shippingFee} onChange={e => setNewOrderForm({...newOrderForm, shippingFee: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-lime-500 text-sm font-bold text-slate-700" placeholder="0" />
+                  <input type="number" value={newOrderForm.shippingFee} onChange={e => setNewOrderForm({ ...newOrderForm, shippingFee: e.target.value })} className="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-lime-500 text-sm font-bold text-slate-700" placeholder="0" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1">Biaya Tambahan</label>
-                  <input type="number" value={newOrderForm.additionalFee} onChange={e => setNewOrderForm({...newOrderForm, additionalFee: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-lime-500 text-sm font-bold text-slate-700" placeholder="0" />
+                  <input type="number" value={newOrderForm.additionalFee} onChange={e => setNewOrderForm({ ...newOrderForm, additionalFee: e.target.value })} className="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-lime-500 text-sm font-bold text-slate-700" placeholder="0" />
                 </div>
               </div>
 
@@ -607,21 +606,21 @@ export function AdminOrders() {
                           <p className="text-xs text-slate-500">Rp {(item.price || 0).toLocaleString('id-ID')}</p>
                         </div>
                         <div className="flex items-center gap-3 ml-4">
-                          <input 
-                            type="number" 
+                          <input
+                            type="number"
                             min="1"
                             className="w-16 pl-2 pr-2 py-1.5 bg-white border border-slate-200 rounded-lg outline-none text-center font-bold text-sm focus:ring-2 focus:ring-lime-500"
                             value={item.quantity}
                             onChange={(e) => {
                               const newItems = [...newOrderForm.items];
                               newItems[index].quantity = parseInt(e.target.value) || 1;
-                              setNewOrderForm({...newOrderForm, items: newItems});
+                              setNewOrderForm({ ...newOrderForm, items: newItems });
                             }}
                           />
-                          <button 
+                          <button
                             onClick={() => {
                               const newItems = newOrderForm.items.filter((_, i) => i !== index);
-                              setNewOrderForm({...newOrderForm, items: newItems});
+                              setNewOrderForm({ ...newOrderForm, items: newItems });
                             }}
                             className="text-rose-400 p-1 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                           >
@@ -632,9 +631,9 @@ export function AdminOrders() {
                     ))}
                   </div>
                 )}
-                
+
                 <div>
-                  <select 
+                  <select
                     className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none font-bold text-slate-700 text-sm focus:ring-2 focus:ring-lime-500"
                     onChange={(e) => {
                       const productId = parseInt(e.target.value);
@@ -662,13 +661,13 @@ export function AdminOrders() {
             </div>
 
             <div className="flex gap-3 mt-6 pt-6 border-t border-slate-100 flex-shrink-0">
-              <button 
+              <button
                 onClick={() => setCreatingOrder(false)}
                 className="flex-1 px-4 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-colors"
               >
                 Batal
               </button>
-              <button 
+              <button
                 onClick={handleCreateOrder}
                 disabled={newOrderForm.items.length === 0 || !newOrderForm.name || !newOrderForm.phone}
                 className="flex-1 px-4 py-3 bg-lime-600 text-white font-bold rounded-xl hover:bg-lime-700 transition-colors shadow-md disabled:opacity-50"

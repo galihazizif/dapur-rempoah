@@ -778,6 +778,59 @@ export default {
       }
     }
 
+    // Admin Customer List
+    if (url.pathname === "/admin/customers" && request.method === "GET") {
+      if (!checkAuth()) return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      try {
+        const page = parseInt(url.searchParams.get("page") || "1");
+        const limit = parseInt(url.searchParams.get("limit") || "10");
+        const search = url.searchParams.get("search") || "";
+
+        const offset = (page - 1) * limit;
+
+        let whereClauses = [];
+        let params = [];
+
+        if (search) {
+          whereClauses.push("(c.name LIKE ? OR c.email LIKE ? OR c.id LIKE ?)");
+          const searchPattern = `%${search}%`;
+          params.push(searchPattern, searchPattern, searchPattern);
+        }
+
+        const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+
+        // Total count
+        const countQuery = `SELECT COUNT(*) as count FROM customers c ${whereSql}`;
+        const countResult = await env.DB.prepare(countQuery).bind(...params).first();
+        const total = countResult ? countResult.count : 0;
+        const totalPages = Math.ceil(total / limit);
+
+        // Paginated results
+        const dataQuery = `
+          SELECT c.id, c.email, c.name, c.picture, c.created_at,
+            (SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.id) as order_count
+          FROM customers c
+          ${whereSql}
+          ORDER BY c.created_at DESC
+          LIMIT ? OFFSET ?
+        `;
+        const { results } = await env.DB.prepare(dataQuery).bind(...params, limit, offset).all();
+
+        return new Response(JSON.stringify({
+          success: true,
+          data: results,
+          pagination: {
+            total,
+            page,
+            limit,
+            totalPages
+          }
+        }), { headers: corsHeaders });
+      } catch (error) {
+        return new Response(JSON.stringify({ success: false, message: error.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
     // Admin Order List
     if (url.pathname === "/admin/orders" && request.method === "GET") {
       if (!checkAuth()) return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 401, headers: corsHeaders });
@@ -787,6 +840,7 @@ export default {
         const search = url.searchParams.get("search") || "";
         const status = url.searchParams.get("status") || "all";
         const payment_status = url.searchParams.get("payment_status") || "all";
+        const registered = url.searchParams.get("registered") || "all";
 
         const offset = (page - 1) * limit;
 
@@ -807,6 +861,14 @@ export default {
         if (payment_status && payment_status !== 'all') {
           whereClauses.push("payment_status = ?");
           params.push(payment_status);
+        }
+
+        if (registered && registered !== 'all') {
+          if (registered === 'registered') {
+            whereClauses.push("customer_id IS NOT NULL");
+          } else if (registered === 'guest') {
+            whereClauses.push("customer_id IS NULL");
+          }
         }
 
         const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
@@ -972,7 +1034,7 @@ export default {
     if (url.pathname === "/admin/orders" && request.method === "POST") {
       if (!checkAuth()) return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 401, headers: corsHeaders });
       try {
-        const { customer, items, shippingFee = 0, additionalFee = 0 } = await request.json();
+        const { customer, items, shippingFee = 0, additionalFee = 0, customer_id = null } = await request.json();
         const { name, phone = '', address = '', order_type = 'delivery', pickup_delivery_date, pickup_delivery_time } = customer;
         
         const orderId = generateFriendlyId('ORD');
@@ -981,6 +1043,16 @@ export default {
         let calculatedTotal = 0;
         const verifiedItems = [];
         const statements = [];
+
+        // Validate registered customer if provided
+        let finalCustomerId = null;
+        if (customer_id) {
+          const existingCustomer = await env.DB.prepare("SELECT id FROM customers WHERE id = ?").bind(customer_id).first();
+          if (!existingCustomer) {
+            throw new Error("Customer not found");
+          }
+          finalCustomerId = customer_id;
+        }
         
         const productIds = items.map(item => item.id || item.product_id);
         const { results: dbProducts } = await env.DB.prepare(`
@@ -999,9 +1071,9 @@ export default {
         
         statements.push(
           env.DB.prepare(`
-            INSERT INTO orders (id, hash, customer_name, customer_phone, customer_address, total_amount, status, payment_method, payment_status, order_type, pickup_delivery_date, pickup_delivery_time, shipping_fee, additional_fee)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          `).bind(orderId, orderHash, name, phone, address, calculatedTotal, 'pending', 'qris', 'unpaid', order_type, pickup_delivery_date || null, pickup_delivery_time || null, shippingFee, additionalFee)
+            INSERT INTO orders (id, hash, customer_name, customer_phone, customer_address, total_amount, status, payment_method, payment_status, order_type, pickup_delivery_date, pickup_delivery_time, shipping_fee, additional_fee, customer_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).bind(orderId, orderHash, name, phone, address, calculatedTotal, 'pending', 'qris', 'unpaid', order_type, pickup_delivery_date || null, pickup_delivery_time || null, shippingFee, additionalFee, finalCustomerId)
         );
 
         for (const item of verifiedItems) {

@@ -152,10 +152,13 @@ export function OrderDetail() {
       content.push({ type: 'row', left: 'Ongkir', right: fmt(order.shipping_fee) });
     }
 
+    if (order.additional_fee) {
+      content.push({ type: 'row', left: 'Biaya', right: fmt(order.additional_fee) });
+    }
+
     content.push(
       { type: 'row', left: 'TOTAL', right: fmt(order.total_amount), bold: true },
       { type: 'text', text: 'Terima kasih!', align: 'center' },
-      { type: 'feed' },
     );
 
     return { cut: true, content };

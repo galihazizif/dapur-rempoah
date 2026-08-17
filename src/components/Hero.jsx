@@ -9,12 +9,12 @@ export const Hero = () => {
         <div className="relative z-10 lg:w-full lg:max-w-2xl">
           <main className="mx-auto max-w-7xl px-4 sm:px-6 md:mt-16 lg:px-8 lg:pl-0 lg:mt-20 pb-20">
             <div className="sm:text-center lg:text-left">
-              <h1 className="text-4xl tracking-tight font-extrabold text-slate-900 sm:text-5xl md:text-6xl">
-                <span className="block xl:inline">Masakan <br></br> Rumahan</span>{' '}
-              </h1>
+              <h2 className="text-4xl tracking-tight font-extrabold text-slate-900 sm:text-5xl md:text-6xl">
+                <span className="block xl:inline">Dapur Rempoah</span>{' '}
+              </h2>
               <p className="mt-3 text-base text-slate-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                Spesialis Ayam Goreng di Purbalingga.
-                Dapur Rempoah menghadirkan hidangan tradisional dengan sentuhan modern. Kami menggunakan bahan-bahan segar dan rempah pilihan.
+                Pesan ayam goreng rumahan secara online.
+                Dapur Rempoah adalah plaftorm untuk melakukan pemesanan makanan rumahan secara online, menghadirkan hidangan tradisional dengan sentuhan modern. Kami menggunakan bahan-bahan segar dan rempah pilihan.
               </p>
               <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
                 <div className="rounded-md shadow">

@@ -20,6 +20,8 @@ export function AdminOrders() {
   const [availableProducts, setAvailableProducts] = useState([]);
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [newOrderForm, setNewOrderForm] = useState({ name: '', phone: '', address: '', order_type: 'delivery', items: [], shippingFee: '', additionalFee: '' });
+  const [registeredCustomers, setRegisteredCustomers] = useState([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState('');
 
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787';
   const { adminToken, setShowLogin } = useOutletContext();
@@ -135,15 +137,30 @@ export function AdminOrders() {
   };
 
   const handleOpenCreateOrder = async () => {
+    const tasks = [];
     if (availableProducts.length === 0) {
-      try {
-        const res = await fetch(`${apiUrl}/products`);
-        const data = await res.json();
-        setAvailableProducts(data.filter(p => p.available));
-      } catch (e) {
-        console.error("Gagal memuat produk", e);
-      }
+      tasks.push(
+        fetch(`${apiUrl}/products`)
+          .then(res => res.json())
+          .then(data => setAvailableProducts(data.filter(p => p.available)))
+      );
     }
+    tasks.push(
+      fetch(`${apiUrl}/admin/customers?limit=100`, {
+        headers: { 'Authorization': `Bearer ${adminToken}` }
+      })
+        .then(res => {
+          if (res.status === 401) { setShowLogin(true); return null; }
+          return res.json();
+        })
+        .then(data => setRegisteredCustomers(data?.data || []))
+    );
+    try {
+      await Promise.all(tasks);
+    } catch (e) {
+      console.error("Gagal memuat data", e);
+    }
+    setSelectedCustomerId('');
     setCreatingOrder(true);
   };
 
@@ -168,12 +185,14 @@ export function AdminOrders() {
           },
           items: newOrderForm.items,
           shippingFee: Number(newOrderForm.shippingFee) || 0,
-          additionalFee: Number(newOrderForm.additionalFee) || 0
+          additionalFee: Number(newOrderForm.additionalFee) || 0,
+          customer_id: selectedCustomerId || null
         })
       });
       if (response.ok) {
         setCreatingOrder(false);
         setNewOrderForm({ name: '', phone: '', address: '', order_type: 'delivery', items: [], shippingFee: '', additionalFee: '' });
+        setSelectedCustomerId('');
         fetchOrders();
       } else {
         const errData = await response.json();
@@ -574,6 +593,25 @@ export function AdminOrders() {
 
             <div className="overflow-y-auto pr-2 flex-1 space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Pelanggan Terdaftar</label>
+                  <select
+                    value={selectedCustomerId}
+                    onChange={(e) => {
+                      const customerId = e.target.value;
+                      setSelectedCustomerId(customerId);
+                      const customer = registeredCustomers.find(c => c.id === customerId);
+                      setNewOrderForm(prev => ({ ...prev, name: customer ? customer.name : '' }));
+                    }}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-lime-500 text-sm font-bold text-slate-700"
+                  >
+                    <option value="">-- Pelanggan Biasa (Tanpa Akun) --</option>
+                    {registeredCustomers.map(c => (
+                      <option key={c.id} value={c.id}>{c.name} ({c.email})</option>
+                    ))}
+                  </select>
+                  <p className="text-[11px] text-slate-400 mt-1">Pilih akun Google terdaftar untuk menautkan pesanan ini ke pelanggan tersebut.</p>
+                </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1">Nama Pelanggan *</label>
                   <input type="text" value={newOrderForm.name} onChange={e => setNewOrderForm({ ...newOrderForm, name: e.target.value })} className="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-lime-500 text-sm font-bold text-slate-700" placeholder="Nama" />

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, Users, Mail, Calendar, ShoppingBag } from 'lucide-react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, Link } from 'react-router-dom';
 
 export function AdminCustomers() {
   const [customers, setCustomers] = useState([]);
@@ -117,9 +117,13 @@ export function AdminCustomers() {
                     </p>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="flex items-center gap-1.5 text-sm font-bold text-slate-700 w-fit px-3 py-1 rounded-full bg-lime-50 text-lime-700 border border-lime-100">
+                    <Link
+                      to={`/admin/orders?customer_id=${encodeURIComponent(customer.id)}`}
+                      className="flex items-center gap-1.5 text-sm font-bold text-lime-700 w-fit px-3 py-1 rounded-full bg-lime-50 border border-lime-100 hover:bg-lime-100 hover:border-lime-200 transition-colors"
+                      title="Lihat pesanan pelanggan ini"
+                    >
                       <ShoppingBag size={12} /> {customer.order_count || 0}
-                    </span>
+                    </Link>
                   </td>
                   <td className="px-6 py-4">
                     <p className="text-sm text-slate-500 flex items-center gap-1.5">

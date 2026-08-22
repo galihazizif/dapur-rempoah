@@ -85,7 +85,7 @@ export function PrivacyPolicy() {
             </p>
             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm space-y-1">
               <p><strong>Dapur Rempoah</strong></p>
-              <p>Alamat: Babakan RT 09 / RW 02, Purbalingga, Jawa Tengah</p>
+              <p>Alamat: Babakan, Purbalingga, Jawa Tengah</p>
               <p>WhatsApp: <a href="https://wa.me/6285117054626" className="text-lime-600 underline font-bold">+62 851-1705-4626</a></p>
             </div>
           </section>

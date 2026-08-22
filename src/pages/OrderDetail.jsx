@@ -161,7 +161,7 @@ export function OrderDetail() {
       { type: 'text', text: 'Terima kasih!', align: 'center' },
     );
 
-    return { cut: true, content };
+    return { cut: false, content };
   };
 
   const sendToPrinter = async () => {

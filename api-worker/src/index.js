@@ -475,6 +475,47 @@ export default {
       }
     }
 
+    // My Orders (logged in customer's own orders, paginated)
+    if (url.pathname === "/my/orders" && request.method === "GET") {
+      const authHeader = request.headers.get("Authorization");
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      }
+      const token = authHeader.split(" ")[1];
+      try {
+        const session = await env.DB.prepare("SELECT customer_id FROM customer_sessions WHERE token = ? AND expires_at > datetime('now')").bind(token).first();
+        if (!session) {
+          return new Response(JSON.stringify({ success: false, message: "Session expired or invalid" }), { status: 401, headers: corsHeaders });
+        }
+
+        const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
+        const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get("limit") || "10")));
+        const offset = (page - 1) * limit;
+
+        const countResult = await env.DB.prepare("SELECT COUNT(*) as count FROM orders WHERE customer_id = ?").bind(session.customer_id).first();
+        const total = countResult ? countResult.count : 0;
+        const totalPages = Math.max(1, Math.ceil(total / limit));
+
+        const { results } = await env.DB.prepare(`
+          SELECT * FROM orders WHERE customer_id = ?
+          ORDER BY created_at DESC LIMIT ? OFFSET ?
+        `).bind(session.customer_id, limit, offset).all();
+
+        return new Response(JSON.stringify({
+          success: true,
+          data: results,
+          pagination: {
+            total,
+            page,
+            limit,
+            totalPages
+          }
+        }), { headers: corsHeaders });
+      } catch (error) {
+        return new Response(JSON.stringify({ success: false, message: error.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
     // Product Management Endpoints
     if (url.pathname === "/products" && request.method === "POST") {
       if (!checkAuth()) {
@@ -841,6 +882,7 @@ export default {
         const status = url.searchParams.get("status") || "all";
         const payment_status = url.searchParams.get("payment_status") || "all";
         const registered = url.searchParams.get("registered") || "all";
+        const customer_id = url.searchParams.get("customer_id") || "";
 
         const offset = (page - 1) * limit;
 
@@ -861,6 +903,11 @@ export default {
         if (payment_status && payment_status !== 'all') {
           whereClauses.push("payment_status = ?");
           params.push(payment_status);
+        }
+
+        if (customer_id) {
+          whereClauses.push("customer_id = ?");
+          params.push(customer_id);
         }
 
         if (registered && registered !== 'all') {

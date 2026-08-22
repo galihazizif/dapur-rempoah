@@ -94,8 +94,7 @@ function App() {
             <div>
               <h4 className="font-bold text-slate-900 mb-4">Kontak</h4>
               <ul className="space-y-2 text-slate-500">
-                <li>Babakan RT 09 / RW 02</li>
-                <li>Purbalingga, Jawa Tengah</li>
+                <li>Babakan, Purbalingga, Jawa Tengah</li>
                 <li><span className="flex items-center gap-2"><img src={waLogo} className="w-6 h-6" /> <a href="https://wa.me/6285117054626">6285117054626</a></span></li>
               </ul>
             </div>

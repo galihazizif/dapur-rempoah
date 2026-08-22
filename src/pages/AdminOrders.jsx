@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, Package, Search, Clock, Calendar, CheckCircle2, XCircle, ShoppingBag, User, MapPin, Phone, CreditCard, Ticket, Plus } from 'lucide-react';
 import { clsx } from 'clsx';
-import { Link, useOutletContext } from 'react-router-dom';
+import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
 
 export function AdminOrders() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlCustomerId = searchParams.get('customer_id') || '';
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -11,6 +13,8 @@ export function AdminOrders() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterPayment, setFilterPayment] = useState('all');
   const [filterRegistered, setFilterRegistered] = useState('all');
+  const [filterCustomerId, setFilterCustomerId] = useState(urlCustomerId);
+  const [filterCustomerName, setFilterCustomerName] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -26,7 +30,7 @@ export function AdminOrders() {
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787';
   const { adminToken, setShowLogin } = useOutletContext();
 
-  const fetchOrders = async (page = currentPage, search = searchTerm, status = filterStatus, payment = filterPayment, registered = filterRegistered) => {
+  const fetchOrders = async (page = currentPage, search = searchTerm, status = filterStatus, payment = filterPayment, registered = filterRegistered, customerId = filterCustomerId) => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -37,6 +41,9 @@ export function AdminOrders() {
         payment_status: payment,
         registered: registered
       });
+      if (customerId) {
+        params.set('customer_id', customerId);
+      }
       const response = await fetch(`${apiUrl}/admin/orders?${params.toString()}`, {
         headers: {
           'Authorization': `Bearer ${adminToken}`
@@ -67,9 +74,38 @@ export function AdminOrders() {
 
   useEffect(() => {
     if (adminToken) {
-      fetchOrders(currentPage, searchTerm, filterStatus, filterPayment, filterRegistered);
+      fetchOrders(currentPage, searchTerm, filterStatus, filterPayment, filterRegistered, filterCustomerId);
     }
-  }, [adminToken, currentPage, searchTerm, filterStatus, filterPayment, filterRegistered]);
+  }, [adminToken, currentPage, searchTerm, filterStatus, filterPayment, filterRegistered, filterCustomerId]);
+
+  useEffect(() => {
+    setFilterCustomerId(urlCustomerId);
+    setCurrentPage(1);
+  }, [urlCustomerId]);
+
+  useEffect(() => {
+    if (!filterCustomerId) {
+      setFilterCustomerName('');
+      return;
+    }
+    let cancelled = false;
+    fetch(`${apiUrl}/admin/customers?search=${encodeURIComponent(filterCustomerId)}&limit=5`, {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (!cancelled) {
+          const customer = (data.data || []).find(c => c.id === filterCustomerId);
+          setFilterCustomerName(customer ? customer.name : '');
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [filterCustomerId, adminToken, apiUrl]);
+
+  const clearCustomerFilter = () => {
+    setSearchParams({});
+  };
 
   const handleUpdateOrder = async (id, status, payment_status, shipping_fee, additional_fee) => {
     try {
@@ -296,6 +332,20 @@ export function AdminOrders() {
             </select>
           </div>
         </div>
+
+        {filterCustomerId && (
+          <div className="px-4 py-3 bg-lime-50 border-b border-lime-100 flex items-center justify-between gap-3">
+            <p className="text-sm font-bold text-lime-800">
+              Menampilkan pesanan dari pelanggan: <span className="font-black">{filterCustomerName || filterCustomerId}</span>
+            </p>
+            <button
+              onClick={clearCustomerFilter}
+              className="text-xs font-bold text-lime-700 bg-white border border-lime-200 px-3 py-1.5 rounded-xl hover:bg-lime-100 transition-colors"
+            >
+              Hapus Filter
+            </button>
+          </div>
+        )}
 
         <div className="overflow-x-auto">
           <table className="w-full text-left">

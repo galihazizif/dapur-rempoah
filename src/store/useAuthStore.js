@@ -1,8 +1,17 @@
 import { create } from 'zustand'
 
+function readLocal(key) {
+  try {
+    if (typeof localStorage === 'undefined') return null;
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
 export const useAuthStore = create((set) => ({
-  token: localStorage.getItem('customer_token') || null,
-  customer: JSON.parse(localStorage.getItem('customer_profile')) || null,
+  token: readLocal('customer_token'),
+  customer: JSON.parse(readLocal('customer_profile')) || null,
   setAuth: (token, customer) => {
     localStorage.setItem('customer_token', token);
     localStorage.setItem('customer_profile', JSON.stringify(customer));

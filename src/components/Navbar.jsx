@@ -4,11 +4,14 @@ import { ShoppingCart, Menu as MenuIcon, X } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { GoogleLogin } from '@react-oauth/google';
+import { useMounted } from '../hooks/useMounted';
 
 export const Navbar = ({ onCartClick }) => {
   const itemCount = useCartStore((state) => state.getItemCount());
   const { token, customer, setAuth, logout } = useAuthStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const mounted = useMounted();
+  const isLoggedIn = mounted && token;
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787';
 
   const handleGoogleSuccess = async (response) => {
@@ -45,7 +48,7 @@ export const Navbar = ({ onCartClick }) => {
               <a href="#" className="text-slate-700 hover:text-lime-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Tentang Kami</a>
               <Link to="/history" className="text-slate-700 hover:text-lime-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Riwayat</Link>
               
-              {!token ? (
+              {!isLoggedIn ? (
                 <div className="ml-4 transform scale-90 inline-block align-middle origin-left">
                   <GoogleLogin 
                     onSuccess={handleGoogleSuccess}
@@ -125,7 +128,7 @@ export const Navbar = ({ onCartClick }) => {
           
           {/* Mobile Auth */}
           <div className="pt-2 mt-2 border-t border-slate-100">
-            {!token ? (
+            {!isLoggedIn ? (
               <div className="px-4 py-2">
                 <GoogleLogin 
                   onSuccess={handleGoogleSuccess}

@@ -1,5 +1,5 @@
 import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import { hydrateRoot } from 'react-dom/client'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import './index.css'
 import App from './App.jsx'
@@ -17,7 +17,7 @@ if (window.trustedTypes && window.trustedTypes.createPolicy) {
 
 import { BrowserRouter } from 'react-router-dom'
 
-createRoot(document.getElementById('root')).render(
+hydrateRoot(document.getElementById('root'),
   <StrictMode>
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "PLACEHOLDER"}>
       <BrowserRouter>

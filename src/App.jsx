@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { CartDrawer } from './components/CartDrawer';
-import { CheckoutModal } from './components/CheckoutModal';
 import { useMenu } from './hooks/useMenu';
 import { Home } from './pages/Home';
 import { OrderDetail } from './pages/OrderDetail';
@@ -21,6 +20,12 @@ import { useEffect } from 'react';
 import waLogo from './assets/wa_icon.png';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { TermsAndConditions } from './pages/TermsAndConditions';
+import { lazy, Suspense } from 'react';
+import { useMounted } from './hooks/useMounted';
+
+const CheckoutModal = lazy(() =>
+  import('./components/CheckoutModal').then((m) => ({ default: m.CheckoutModal }))
+);
 
 function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -29,6 +34,7 @@ function App() {
   const { fetchSettings } = useSettingsStore();
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const mounted = useMounted();
 
   useEffect(() => {
     fetchSettings();
@@ -112,10 +118,14 @@ function App() {
         onClose={() => setIsCartOpen(false)}
         onCheckout={handleOpenCheckout}
       />
-      <CheckoutModal
-        isOpen={isCheckoutOpen}
-        onClose={() => setIsCheckoutOpen(false)}
-      />
+      {mounted && (
+        <Suspense fallback={null}>
+          <CheckoutModal
+            isOpen={isCheckoutOpen}
+            onClose={() => setIsCheckoutOpen(false)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

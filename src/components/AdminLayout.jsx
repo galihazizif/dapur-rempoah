@@ -92,7 +92,7 @@ export function AdminLayout() {
               <ShieldCheck size={28} />
             </div>
             <div>
-              <h2 className="text-xl font-black text-slate-900 tracking-tight leading-none mb-1">Dapur Rempoah</h2>
+              <h2 className="text-xl font-black text-slate-900 tracking-tight leading-none mb-1">Manage</h2>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Admin Panel</p>
             </div>
           </div>

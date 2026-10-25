@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, CheckCircle2, XCircle, ChevronLeft, Ticket, Search, Package, ShoppingBag, CreditCard } from 'lucide-react';
+import { Plus, Edit2, Trash2, CheckCircle2, XCircle, ChevronLeft, Ticket, Search, Gift, Percent } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Link, useOutletContext } from 'react-router-dom';
 
@@ -12,7 +12,9 @@ export function AdminVouchers() {
   const [editingVoucher, setEditingVoucher] = useState(null);
   const [formData, setFormData] = useState({
     code: '',
+    type: 'discount',
     amount: 0,
+    reward_item_name: '',
     is_active: true,
     is_used: false
   });
@@ -84,7 +86,9 @@ export function AdminVouchers() {
       setEditingVoucher(voucher);
       setFormData({
         code: voucher.code,
-        amount: voucher.amount,
+        type: voucher.type || (voucher.reward_item_name ? 'free_item' : 'discount'),
+        amount: voucher.amount || 0,
+        reward_item_name: voucher.reward_item_name || '',
         is_active: voucher.is_active ? true : false,
         is_used: voucher.is_used ? true : false,
       });
@@ -92,7 +96,9 @@ export function AdminVouchers() {
       setEditingVoucher(null);
       setFormData({
         code: '',
+        type: 'discount',
         amount: 0,
+        reward_item_name: '',
         is_active: true,
         is_used: false,
       });
@@ -102,6 +108,16 @@ export function AdminVouchers() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (formData.type === 'discount' && (!formData.amount || formData.amount <= 0)) {
+      alert('Nominal potongan harga harus lebih dari 0');
+      return;
+    }
+    if (formData.type === 'free_item' && !formData.reward_item_name.trim()) {
+      alert('Nama item gratis wajib diisi');
+      return;
+    }
+
     const method = editingVoucher ? 'PUT' : 'POST';
     const url = editingVoucher ? `${apiUrl}/admin/vouchers/${editingVoucher.code}` : `${apiUrl}/admin/vouchers`;
 
@@ -112,7 +128,11 @@ export function AdminVouchers() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${adminToken}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          amount: formData.type === 'free_item' ? 0 : formData.amount,
+          reward_item_name: formData.type === 'free_item' ? formData.reward_item_name.trim() : null
+        })
       });
       if (response.ok) {
         setIsModalOpen(false);
@@ -175,7 +195,7 @@ export function AdminVouchers() {
             <thead>
               <tr className="bg-slate-50/50 text-slate-400 text-xs font-bold uppercase tracking-wider">
                 <th className="px-6 py-4">Kode Voucher</th>
-                <th className="px-6 py-4">Potongan Rp</th>
+                <th className="px-6 py-4">Tipe / Manfaat</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Digunakan?</th>
                 <th className="px-6 py-4 text-right">Aksi</th>
@@ -193,7 +213,19 @@ export function AdminVouchers() {
                       {v.code}
                     </div>
                   </td>
-                  <td className="px-6 py-4 font-black text-lime-600">Rp {v.amount.toLocaleString('id-ID')}</td>
+                  <td className="px-6 py-4">
+                    {v.type === 'free_item' || v.reward_item_name ? (
+                      <div className="flex items-center gap-1.5 text-emerald-700 font-bold bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-xl w-fit text-xs">
+                        <Gift size={14} className="text-emerald-500 shrink-0" />
+                        <span>Gratis: {v.reward_item_name || 'Item'}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5 font-black text-lime-600 text-sm">
+                        <Percent size={14} className="text-lime-500 shrink-0" />
+                        <span>Rp {(v.amount || 0).toLocaleString('id-ID')}</span>
+                      </div>
+                    )}
+                  </td>
                   <td className="px-6 py-4">
                     <button 
                       onClick={() => handleToggleActive(v)}
@@ -267,16 +299,61 @@ export function AdminVouchers() {
               </div>
 
               <div>
-                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Nilai Potongan (Rp)</label>
-                <input 
-                  required
-                  type="number" 
-                  min="0"
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-bold text-slate-900"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({...formData, amount: parseInt(e.target.value) || 0})}
-                />
+                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Tipe Manfaat</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, type: 'discount' })}
+                    className={clsx(
+                      "p-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer",
+                      formData.type === 'discount' 
+                        ? "bg-lime-50 border-lime-500 text-lime-800 shadow-sm" 
+                        : "bg-slate-50 border-slate-100 text-slate-500 hover:bg-slate-100"
+                    )}
+                  >
+                    <Percent size={14} /> Diskon (Rp)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, type: 'free_item', amount: 0 })}
+                    className={clsx(
+                      "p-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer",
+                      formData.type === 'free_item' 
+                        ? "bg-emerald-50 border-emerald-500 text-emerald-800 shadow-sm" 
+                        : "bg-slate-50 border-slate-100 text-slate-500 hover:bg-slate-100"
+                    )}
+                  >
+                    <Gift size={14} /> Gratis Item
+                  </button>
+                </div>
               </div>
+
+              {formData.type === 'discount' ? (
+                <div>
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Nilai Potongan (Rp)</label>
+                  <input 
+                    required
+                    type="number" 
+                    min="1"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-bold text-slate-900"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({...formData, amount: parseInt(e.target.value) || 0})}
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Nama Item Gratis</label>
+                  <input 
+                    required
+                    type="text" 
+                    placeholder="Contoh: Es Jeruk, 1 Porsi Mendoan"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-bold text-slate-900"
+                    value={formData.reward_item_name}
+                    onChange={(e) => setFormData({...formData, reward_item_name: e.target.value})}
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1.5 ml-1">Item ini akan otomatis masuk ke struk pesanan & dapur sebagai item bonus gratis (Rp 0).</p>
+                </div>
+              )}
 
               <div className="flex items-center gap-2 py-2">
                 <input 
@@ -306,13 +383,13 @@ export function AdminVouchers() {
                 <button 
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 px-6 py-4 rounded-2xl font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all"
+                  className="flex-1 px-6 py-4 rounded-2xl font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all cursor-pointer"
                 >
                   Batal
                 </button>
                 <button 
                   type="submit"
-                  className="flex-[2] px-6 py-4 rounded-2xl font-bold bg-slate-900 text-white hover:bg-lime-600 transition-all shadow-lg shadow-slate-200"
+                  className="flex-[2] px-6 py-4 rounded-2xl font-bold bg-slate-900 text-white hover:bg-lime-600 transition-all shadow-lg shadow-slate-200 cursor-pointer"
                 >
                   Simpan
                 </button>

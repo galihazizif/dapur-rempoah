@@ -393,8 +393,8 @@ export function AdminOrders() {
                   <td className="px-6 py-4">
                     <p className="font-black text-rose-600 text-sm">Rp {order.total_amount.toLocaleString('id-ID')}</p>
                     {order.voucher_code && (
-                      <p className="text-[10px] text-lime-600 font-bold bg-lime-50 px-2 py-0.5 rounded-md inline-block mt-1">
-                        Voucher: {order.voucher_code}
+                      <p className="text-[10px] text-lime-700 font-bold bg-lime-50 border border-lime-100 px-2 py-0.5 rounded-md inline-block mt-1">
+                        Voucher: {order.voucher_code} {order.discount_amount === 0 ? '(Bonus)' : ''}
                       </p>
                     )}
                   </td>

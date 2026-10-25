@@ -67,10 +67,21 @@ export default {
       return `${prefix}${randomPart}`;
     };
 
+    // Ensure voucher columns exist (safe for sqlite/D1)
+    const ensureVoucherSchema = async () => {
+      try {
+        await env.DB.prepare("ALTER TABLE vouchers ADD COLUMN type TEXT DEFAULT 'discount'").run();
+      } catch (e) { }
+      try {
+        await env.DB.prepare("ALTER TABLE vouchers ADD COLUMN reward_item_name TEXT").run();
+      } catch (e) { }
+    };
+
     // Voucher API
     if (url.pathname === "/admin/vouchers" && request.method === "GET") {
       if (!checkAuth()) return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 401, headers: corsHeaders });
       try {
+        await ensureVoucherSchema();
         const { results } = await env.DB.prepare("SELECT * FROM vouchers ORDER BY created_at DESC").all();
         return new Response(JSON.stringify(results), { headers: corsHeaders });
       } catch (error) {
@@ -81,14 +92,29 @@ export default {
     if (url.pathname === "/admin/vouchers" && request.method === "POST") {
       if (!checkAuth()) return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 401, headers: corsHeaders });
       try {
-        const { code, amount, is_active } = await request.json();
-        if (!code || !amount) {
-          return new Response(JSON.stringify({ success: false, message: "Code and amount are required" }), { status: 400, headers: corsHeaders });
+        await ensureVoucherSchema();
+        const { code, amount = 0, type = 'discount', reward_item_name = null, is_active } = await request.json();
+        if (!code || !code.trim()) {
+          return new Response(JSON.stringify({ success: false, message: "Kode voucher wajib diisi" }), { status: 400, headers: corsHeaders });
         }
+        if (type === 'discount' && (!amount || Number(amount) <= 0)) {
+          return new Response(JSON.stringify({ success: false, message: "Nominal potongan harga harus lebih dari 0" }), { status: 400, headers: corsHeaders });
+        }
+        if (type === 'free_item' && (!reward_item_name || !reward_item_name.trim())) {
+          return new Response(JSON.stringify({ success: false, message: "Nama item gratis wajib diisi" }), { status: 400, headers: corsHeaders });
+        }
+
         await env.DB.prepare(`
-          INSERT INTO vouchers (code, amount, is_active, is_used)
-          VALUES (?, ?, ?, ?)
-        `).bind(code.trim().toUpperCase(), amount, is_active !== undefined ? (is_active ? 1 : 0) : 1, 0).run();
+          INSERT INTO vouchers (code, amount, type, reward_item_name, is_active, is_used)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `).bind(
+          code.trim().toUpperCase(), 
+          parseInt(amount) || 0, 
+          type, 
+          reward_item_name ? reward_item_name.trim() : null, 
+          is_active !== undefined ? (is_active ? 1 : 0) : 1, 
+          0
+        ).run();
         
         return new Response(JSON.stringify({ success: true, message: "Voucher created" }), { status: 201, headers: corsHeaders });
       } catch (error) {
@@ -102,17 +128,22 @@ export default {
     if (url.pathname.startsWith("/admin/vouchers/") && request.method === "PUT") {
       if (!checkAuth()) return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 401, headers: corsHeaders });
       try {
+        await ensureVoucherSchema();
         const code = url.pathname.split("/")[3];
-        const { amount, is_active, is_used } = await request.json();
+        const { amount, type, reward_item_name, is_active, is_used } = await request.json();
         
         await env.DB.prepare(`
           UPDATE vouchers 
           SET amount = COALESCE(?, amount), 
+              type = COALESCE(?, type),
+              reward_item_name = COALESCE(?, reward_item_name),
               is_active = COALESCE(?, is_active),
               is_used = COALESCE(?, is_used)
           WHERE code = ?
         `).bind(
-          amount, 
+          amount !== undefined ? (parseInt(amount) || 0) : null, 
+          type !== undefined ? type : null,
+          reward_item_name !== undefined ? (reward_item_name ? reward_item_name.trim() : null) : null,
           is_active !== undefined ? (is_active ? 1 : 0) : null,
           is_used !== undefined ? (is_used ? 1 : 0) : null,
           code
@@ -137,6 +168,7 @@ export default {
 
     if (url.pathname.startsWith("/vouchers/") && request.method === "GET") {
       try {
+        await ensureVoucherSchema();
         const code = url.pathname.split("/")[2];
         const voucher = await env.DB.prepare("SELECT * FROM vouchers WHERE code = ?").bind(code).first();
         if (!voucher) {
@@ -313,6 +345,7 @@ export default {
         }
 
         if (voucherCode) {
+          await ensureVoucherSchema();
           const voucher = await env.DB.prepare("SELECT * FROM vouchers WHERE code = ?").bind(voucherCode.trim().toUpperCase()).first();
           if (!voucher) {
             return new Response(JSON.stringify({ success: false, message: "Voucher tidak ditemukan" }), { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
@@ -324,7 +357,7 @@ export default {
             return new Response(JSON.stringify({ success: false, message: "Voucher sudah digunakan" }), { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
           }
           appliedVoucher = voucher;
-          discountAmount = voucher.amount;
+          discountAmount = voucher.type === 'free_item' ? 0 : (voucher.amount || 0);
         }
 
         let shippingFeeAmount = 0;
@@ -377,6 +410,19 @@ export default {
           );
         }
 
+        // Insert free reward item from voucher if applicable
+        if (appliedVoucher && (appliedVoucher.type === 'free_item' || appliedVoucher.reward_item_name)) {
+          const rewardTitle = appliedVoucher.reward_item_name.includes('Bonus') || appliedVoucher.reward_item_name.includes('Gratis')
+            ? appliedVoucher.reward_item_name
+            : `${appliedVoucher.reward_item_name} (Bonus Voucher)`;
+          statements.push(
+            env.DB.prepare(`
+              INSERT INTO order_items (order_id, product_id, product_name, price, quantity)
+              VALUES (?, ?, ?, ?, ?)
+            `).bind(orderId, 0, rewardTitle, 0, 1)
+          );
+        }
+
         // Execute batch
         await env.DB.batch(statements);
 
@@ -412,6 +458,7 @@ export default {
           `${pickup_delivery_date ? `📅 Tanggal: ${pickup_delivery_date}\n` : ''}` +
           `${pickup_delivery_time ? `⏰ Waktu: ${pickup_delivery_time}\n` : ''}` +
           `${order_type === 'delivery' ? `📍 Alamat: ${customer.address}\n` : ''}` +
+          `${appliedVoucher && (appliedVoucher.type === 'free_item' || appliedVoucher.reward_item_name) ? `🎁 <b>Bonus Voucher:</b> ${appliedVoucher.reward_item_name}\n` : ''}` +
           `${shippingFeeAmount > 0 ? `🚚 Ongkos Kirim: Rp ${shippingFeeAmount.toLocaleString('id-ID')}\n` : ''}` +
           `💰 Total: <b>Rp ${calculatedTotal.toLocaleString('id-ID')}</b>\n\n` +
           `<a href="https://rempoah.my.id/orders/${orderHash}">Kelola Pesanan</a>`

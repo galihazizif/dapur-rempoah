@@ -3,7 +3,7 @@ import { renderToString } from "react-dom/server";
 import { Link, MemoryRouter, NavLink, Outlet, Route, Routes, useLocation, useNavigate, useOutletContext, useParams, useSearchParams } from "react-router-dom";
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import { Suspense, lazy, useCallback, useEffect, useState } from "react";
-import { AlertCircle, ArrowLeft, Calendar, CheckCircle2, ChevronLeft, ChevronRight, Clock, CreditCard, Edit2, Eye, FileText, History, LogOut, Mail, MapPin, Menu, MessageCircle, MessageSquare, Minus, MoreVertical, Package, Phone, Plus, Printer, Save, Search, Send, Settings, Shield, ShieldCheck, ShoppingBag, ShoppingCart, Ticket, Trash2, User, Users, X, XCircle } from "lucide-react";
+import { AlertCircle, ArrowLeft, Calendar, CheckCircle2, ChevronLeft, ChevronRight, Clock, CreditCard, Edit2, Eye, FileText, Gift, History, LogOut, Mail, MapPin, Menu, MessageCircle, MessageSquare, Minus, MoreVertical, Package, Percent, Phone, Plus, Printer, Save, Search, Send, Settings, Shield, ShieldCheck, ShoppingBag, ShoppingCart, Ticket, Trash2, User, Users, X, XCircle } from "lucide-react";
 import { create } from "zustand";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { clsx } from "clsx";
@@ -846,7 +846,7 @@ function OrderDetail() {
 			...items.map((item) => ({
 				type: "row",
 				left: `${item.product_name} x${item.quantity}`,
-				right: fmt(item.price * item.quantity)
+				right: item.price === 0 ? "GRATIS" : fmt(item.price * item.quantity)
 			})),
 			{ type: "divider" },
 			{
@@ -855,10 +855,15 @@ function OrderDetail() {
 				right: fmt(itemsSubtotal)
 			}
 		];
-		if (order.voucher_code) content.push({
+		if (order.voucher_code) if ((order.discount_amount || 0) > 0) content.push({
 			type: "row",
 			left: `Diskon (${order.voucher_code})`,
 			right: `-${fmt(order.discount_amount || 0)}`
+		});
+		else content.push({
+			type: "row",
+			left: `Voucher (${order.voucher_code})`,
+			right: "Bonus Item"
 		});
 		if (order.shipping_fee > 0) content.push({
 			type: "row",
@@ -1236,18 +1241,21 @@ function OrderDetail() {
 									children: [/* @__PURE__ */ jsxs("div", {
 										className: "flex gap-4 items-center",
 										children: [/* @__PURE__ */ jsxs("div", {
-											className: "w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 font-bold",
+											className: clsx("w-10 h-10 rounded-lg flex items-center justify-center font-bold", item.price === 0 ? "bg-emerald-100 text-emerald-600" : "bg-orange-100 text-orange-600"),
 											children: [item.quantity, "x"]
-										}), /* @__PURE__ */ jsxs("div", { children: [/* @__PURE__ */ jsx("p", {
-											className: "font-bold text-slate-900",
-											children: item.product_name
-										}), /* @__PURE__ */ jsxs("p", {
+										}), /* @__PURE__ */ jsxs("div", { children: [/* @__PURE__ */ jsxs("p", {
+											className: "font-bold text-slate-900 flex items-center gap-2",
+											children: [/* @__PURE__ */ jsx("span", { children: item.product_name }), item.price === 0 && /* @__PURE__ */ jsx("span", {
+												className: "text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full",
+												children: "Bonus"
+											})]
+										}), /* @__PURE__ */ jsx("p", {
 											className: "text-slate-500 text-sm",
-											children: ["Rp ", item.price.toLocaleString("id-ID")]
+											children: item.price === 0 ? "Hadiah Promo" : `Rp ${item.price.toLocaleString("id-ID")}`
 										})] })]
-									}), /* @__PURE__ */ jsxs("p", {
-										className: "font-bold text-slate-900 text-right",
-										children: ["Rp ", (item.price * item.quantity).toLocaleString("id-ID")]
+									}), /* @__PURE__ */ jsx("p", {
+										className: clsx("font-bold text-right", item.price === 0 ? "text-emerald-600 font-black text-xs uppercase" : "text-slate-900"),
+										children: item.price === 0 ? "Gratis" : `Rp ${(item.price * item.quantity).toLocaleString("id-ID")}`
 									})]
 								}, item.id))
 							}),
@@ -1339,11 +1347,7 @@ function OrderDetail() {
 									}),
 									order.voucher_code && /* @__PURE__ */ jsxs("div", {
 										className: "flex items-center justify-between text-emerald-600 font-bold",
-										children: [/* @__PURE__ */ jsxs("p", { children: [
-											"Diskon Voucher (",
-											order.voucher_code,
-											")"
-										] }), /* @__PURE__ */ jsxs("p", { children: ["- Rp ", (order.discount_amount || 0).toLocaleString("id-ID")] })]
+										children: [/* @__PURE__ */ jsx("p", { children: (order.discount_amount || 0) > 0 ? `Diskon Voucher (${order.voucher_code})` : `Voucher Digunakan (${order.voucher_code})` }), /* @__PURE__ */ jsx("p", { children: (order.discount_amount || 0) > 0 ? `- Rp ${order.discount_amount.toLocaleString("id-ID")}` : "Gratis Item (Bonus)" })]
 									}),
 									order.shipping_fee > 0 && /* @__PURE__ */ jsxs("div", {
 										className: "flex items-center justify-between text-slate-600 font-bold",
@@ -3196,8 +3200,13 @@ function AdminOrders() {
 												className: "font-black text-rose-600 text-sm",
 												children: ["Rp ", order.total_amount.toLocaleString("id-ID")]
 											}), order.voucher_code && /* @__PURE__ */ jsxs("p", {
-												className: "text-[10px] text-lime-600 font-bold bg-lime-50 px-2 py-0.5 rounded-md inline-block mt-1",
-												children: ["Voucher: ", order.voucher_code]
+												className: "text-[10px] text-lime-700 font-bold bg-lime-50 border border-lime-100 px-2 py-0.5 rounded-md inline-block mt-1",
+												children: [
+													"Voucher: ",
+													order.voucher_code,
+													" ",
+													order.discount_amount === 0 ? "(Bonus)" : ""
+												]
 											})]
 										}),
 										/* @__PURE__ */ jsx("td", {
@@ -4004,7 +4013,9 @@ function AdminVouchers() {
 	const [editingVoucher, setEditingVoucher] = useState(null);
 	const [formData, setFormData] = useState({
 		code: "",
+		type: "discount",
 		amount: 0,
+		reward_item_name: "",
 		is_active: true,
 		is_used: false
 	});
@@ -4058,7 +4069,9 @@ function AdminVouchers() {
 			setEditingVoucher(voucher);
 			setFormData({
 				code: voucher.code,
-				amount: voucher.amount,
+				type: voucher.type || (voucher.reward_item_name ? "free_item" : "discount"),
+				amount: voucher.amount || 0,
+				reward_item_name: voucher.reward_item_name || "",
 				is_active: voucher.is_active ? true : false,
 				is_used: voucher.is_used ? true : false
 			});
@@ -4066,7 +4079,9 @@ function AdminVouchers() {
 			setEditingVoucher(null);
 			setFormData({
 				code: "",
+				type: "discount",
 				amount: 0,
+				reward_item_name: "",
 				is_active: true,
 				is_used: false
 			});
@@ -4075,6 +4090,14 @@ function AdminVouchers() {
 	};
 	const handleSubmit = async (e) => {
 		e.preventDefault();
+		if (formData.type === "discount" && (!formData.amount || formData.amount <= 0)) {
+			alert("Nominal potongan harga harus lebih dari 0");
+			return;
+		}
+		if (formData.type === "free_item" && !formData.reward_item_name.trim()) {
+			alert("Nama item gratis wajib diisi");
+			return;
+		}
 		const method = editingVoucher ? "PUT" : "POST";
 		const url = editingVoucher ? `${apiUrl}/admin/vouchers/${editingVoucher.code}` : `${apiUrl}/admin/vouchers`;
 		try {
@@ -4084,7 +4107,11 @@ function AdminVouchers() {
 					"Content-Type": "application/json",
 					"Authorization": `Bearer ${adminToken}`
 				},
-				body: JSON.stringify(formData)
+				body: JSON.stringify({
+					...formData,
+					amount: formData.type === "free_item" ? 0 : formData.amount,
+					reward_item_name: formData.type === "free_item" ? formData.reward_item_name.trim() : null
+				})
 			});
 			if (response.ok) {
 				setIsModalOpen(false);
@@ -4155,7 +4182,7 @@ function AdminVouchers() {
 								}),
 								/* @__PURE__ */ jsx("th", {
 									className: "px-6 py-4",
-									children: "Potongan Rp"
+									children: "Tipe / Manfaat"
 								}),
 								/* @__PURE__ */ jsx("th", {
 									className: "px-6 py-4",
@@ -4190,9 +4217,21 @@ function AdminVouchers() {
 											children: v.code
 										})
 									}),
-									/* @__PURE__ */ jsxs("td", {
-										className: "px-6 py-4 font-black text-lime-600",
-										children: ["Rp ", v.amount.toLocaleString("id-ID")]
+									/* @__PURE__ */ jsx("td", {
+										className: "px-6 py-4",
+										children: v.type === "free_item" || v.reward_item_name ? /* @__PURE__ */ jsxs("div", {
+											className: "flex items-center gap-1.5 text-emerald-700 font-bold bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-xl w-fit text-xs",
+											children: [/* @__PURE__ */ jsx(Gift, {
+												size: 14,
+												className: "text-emerald-500 shrink-0"
+											}), /* @__PURE__ */ jsxs("span", { children: ["Gratis: ", v.reward_item_name || "Item"] })]
+										}) : /* @__PURE__ */ jsxs("div", {
+											className: "flex items-center gap-1.5 font-black text-lime-600 text-sm",
+											children: [/* @__PURE__ */ jsx(Percent, {
+												size: 14,
+												className: "text-lime-500 shrink-0"
+											}), /* @__PURE__ */ jsxs("span", { children: ["Rp ", (v.amount || 0).toLocaleString("id-ID")] })]
+										})
 									}),
 									/* @__PURE__ */ jsx("td", {
 										className: "px-6 py-4",
@@ -4267,18 +4306,62 @@ function AdminVouchers() {
 							})] }),
 							/* @__PURE__ */ jsxs("div", { children: [/* @__PURE__ */ jsx("label", {
 								className: "block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1",
+								children: "Tipe Manfaat"
+							}), /* @__PURE__ */ jsxs("div", {
+								className: "grid grid-cols-2 gap-2",
+								children: [/* @__PURE__ */ jsxs("button", {
+									type: "button",
+									onClick: () => setFormData({
+										...formData,
+										type: "discount"
+									}),
+									className: clsx("p-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer", formData.type === "discount" ? "bg-lime-50 border-lime-500 text-lime-800 shadow-sm" : "bg-slate-50 border-slate-100 text-slate-500 hover:bg-slate-100"),
+									children: [/* @__PURE__ */ jsx(Percent, { size: 14 }), " Diskon (Rp)"]
+								}), /* @__PURE__ */ jsxs("button", {
+									type: "button",
+									onClick: () => setFormData({
+										...formData,
+										type: "free_item",
+										amount: 0
+									}),
+									className: clsx("p-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer", formData.type === "free_item" ? "bg-emerald-50 border-emerald-500 text-emerald-800 shadow-sm" : "bg-slate-50 border-slate-100 text-slate-500 hover:bg-slate-100"),
+									children: [/* @__PURE__ */ jsx(Gift, { size: 14 }), " Gratis Item"]
+								})]
+							})] }),
+							formData.type === "discount" ? /* @__PURE__ */ jsxs("div", { children: [/* @__PURE__ */ jsx("label", {
+								className: "block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1",
 								children: "Nilai Potongan (Rp)"
 							}), /* @__PURE__ */ jsx("input", {
 								required: true,
 								type: "number",
-								min: "0",
+								min: "1",
 								className: "w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-bold text-slate-900",
 								value: formData.amount,
 								onChange: (e) => setFormData({
 									...formData,
 									amount: parseInt(e.target.value) || 0
 								})
-							})] }),
+							})] }) : /* @__PURE__ */ jsxs("div", { children: [
+								/* @__PURE__ */ jsx("label", {
+									className: "block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1",
+									children: "Nama Item Gratis"
+								}),
+								/* @__PURE__ */ jsx("input", {
+									required: true,
+									type: "text",
+									placeholder: "Contoh: Es Jeruk, 1 Porsi Mendoan",
+									className: "w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-lime-500 outline-none transition-all font-bold text-slate-900",
+									value: formData.reward_item_name,
+									onChange: (e) => setFormData({
+										...formData,
+										reward_item_name: e.target.value
+									})
+								}),
+								/* @__PURE__ */ jsx("p", {
+									className: "text-[11px] text-slate-400 mt-1.5 ml-1",
+									children: "Item ini akan otomatis masuk ke struk pesanan & dapur sebagai item bonus gratis (Rp 0)."
+								})
+							] }),
 							/* @__PURE__ */ jsxs("div", {
 								className: "flex items-center gap-2 py-2",
 								children: [/* @__PURE__ */ jsx("input", {
@@ -4318,11 +4401,11 @@ function AdminVouchers() {
 								children: [/* @__PURE__ */ jsx("button", {
 									type: "button",
 									onClick: () => setIsModalOpen(false),
-									className: "flex-1 px-6 py-4 rounded-2xl font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all",
+									className: "flex-1 px-6 py-4 rounded-2xl font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all cursor-pointer",
 									children: "Batal"
 								}), /* @__PURE__ */ jsx("button", {
 									type: "submit",
-									className: "flex-[2] px-6 py-4 rounded-2xl font-bold bg-slate-900 text-white hover:bg-lime-600 transition-all shadow-lg shadow-slate-200",
+									className: "flex-[2] px-6 py-4 rounded-2xl font-bold bg-slate-900 text-white hover:bg-lime-600 transition-all shadow-lg shadow-slate-200 cursor-pointer",
 									children: "Simpan"
 								})]
 							})
@@ -4565,7 +4648,7 @@ function AdminLayout() {
 								children: /* @__PURE__ */ jsx(ShieldCheck, { size: 28 })
 							}), /* @__PURE__ */ jsxs("div", { children: [/* @__PURE__ */ jsx("h2", {
 								className: "text-xl font-black text-slate-900 tracking-tight leading-none mb-1",
-								children: "Dapur Rempoah"
+								children: "Manage"
 							}), /* @__PURE__ */ jsx("p", {
 								className: "text-xs font-bold text-slate-400 uppercase tracking-widest",
 								children: "Admin Panel"
@@ -4958,7 +5041,7 @@ function TermsAndConditions() {
 }
 //#endregion
 //#region src/App.jsx
-var CheckoutModal = lazy(() => import("./assets/CheckoutModal-LQ-EQIgo.js").then((m) => ({ default: m.CheckoutModal })));
+var CheckoutModal = lazy(() => import("./assets/CheckoutModal-DeEletn5.js").then((m) => ({ default: m.CheckoutModal })));
 function App() {
 	const [isCartOpen, setIsCartOpen] = useState(false);
 	const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);

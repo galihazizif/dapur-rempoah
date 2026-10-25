@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, Phone, User, MapPin, CheckCircle2, Calendar, Clock, Truck, Store, Navigation } from 'lucide-react';
+import { Send, Phone, User, MapPin, CheckCircle2, Calendar, Clock, Truck, Store, Navigation, Gift } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { Turnstile } from '@marsidev/react-turnstile';
@@ -118,7 +118,8 @@ export const OrderForm = ({ onSuccess }) => {
   }, [mapPosition, formData.order_type]);
   const deliveryCost = deliveryDistance !== null ? Math.max(1000, Math.round(deliveryDistance * 1000)) : 0;
   const isDistanceTooFar = deliveryDistance !== null && deliveryDistance > 10;
-  const totalWithDelivery = Math.max(0, getTotal() - (appliedVoucher?.amount || 0) + deliveryCost);
+  const voucherDiscount = (appliedVoucher?.type === 'free_item' || appliedVoucher?.reward_item_name) ? 0 : (appliedVoucher?.amount || 0);
+  const totalWithDelivery = Math.max(0, getTotal() - voucherDiscount + deliveryCost);
 
   const handleApplyVoucher = async () => {
     if (!voucherInput.trim()) return;
@@ -431,14 +432,22 @@ export const OrderForm = ({ onSuccess }) => {
           </div>
         ) : (
           <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 px-4 py-3 rounded-xl">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="text-emerald-500" size={18} />
+            <div className="flex items-center gap-2.5">
+              {appliedVoucher.type === 'free_item' || appliedVoucher.reward_item_name ? (
+                <Gift className="text-emerald-600 shrink-0" size={20} />
+              ) : (
+                <CheckCircle2 className="text-emerald-500 shrink-0" size={20} />
+              )}
               <div>
-                <p className="text-sm font-bold text-emerald-700">{appliedVoucher.code}</p>
-                <p className="text-xs text-emerald-600">Diskon Rp {appliedVoucher.amount.toLocaleString('id-ID')}</p>
+                <p className="text-sm font-bold text-emerald-800">{appliedVoucher.code}</p>
+                {appliedVoucher.type === 'free_item' || appliedVoucher.reward_item_name ? (
+                  <p className="text-xs text-emerald-700 font-medium">🎁 Gratis: {appliedVoucher.reward_item_name}</p>
+                ) : (
+                  <p className="text-xs text-emerald-600">Diskon Rp {(appliedVoucher.amount || 0).toLocaleString('id-ID')}</p>
+                )}
               </div>
             </div>
-            <button type="button" onClick={handleRemoveVoucher} className="text-rose-500 hover:text-rose-600 text-sm font-bold">Batal</button>
+            <button type="button" onClick={handleRemoveVoucher} className="text-rose-500 hover:text-rose-600 text-sm font-bold cursor-pointer">Batal</button>
           </div>
         )}
         {voucherError && <p className="text-xs text-rose-500 font-medium">{voucherError}</p>}
@@ -451,7 +460,18 @@ export const OrderForm = ({ onSuccess }) => {
             <span>Rp {getTotal().toLocaleString('id-ID')}</span>
           </div>
         )}
-        {appliedVoucher && (
+        {appliedVoucher && (appliedVoucher.type === 'free_item' || appliedVoucher.reward_item_name) && (
+          <div className="flex justify-between items-center text-emerald-700 text-sm border-b border-lime-100/50 pb-2 font-medium">
+            <span className="flex items-center gap-1.5">
+              <Gift size={14} className="text-emerald-600" />
+              <span>Bonus: {appliedVoucher.reward_item_name}</span>
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+              Gratis (Rp 0)
+            </span>
+          </div>
+        )}
+        {appliedVoucher && (appliedVoucher.type !== 'free_item' && (appliedVoucher.amount || 0) > 0) && (
           <div className="flex justify-between items-center text-emerald-600 text-sm border-b border-lime-100/50 pb-2">
             <span>Diskon Voucher</span>
             <span>- Rp {appliedVoucher.amount.toLocaleString('id-ID')}</span>

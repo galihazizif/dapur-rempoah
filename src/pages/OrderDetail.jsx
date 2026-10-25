@@ -139,14 +139,18 @@ export function OrderDetail() {
       ...items.map(item => ({
         type: 'row',
         left: `${item.product_name} x${item.quantity}`,
-        right: fmt(item.price * item.quantity)
+        right: item.price === 0 ? 'GRATIS' : fmt(item.price * item.quantity)
       })),
       { type: 'divider' },
       { type: 'row', left: 'Subtotal', right: fmt(itemsSubtotal) },
     ];
 
     if (order.voucher_code) {
-      content.push({ type: 'row', left: `Diskon (${order.voucher_code})`, right: `-${fmt(order.discount_amount || 0)}` });
+      if ((order.discount_amount || 0) > 0) {
+        content.push({ type: 'row', left: `Diskon (${order.voucher_code})`, right: `-${fmt(order.discount_amount || 0)}` });
+      } else {
+        content.push({ type: 'row', left: `Voucher (${order.voucher_code})`, right: 'Bonus Item' });
+      }
     }
     if (order.shipping_fee > 0) {
       content.push({ type: 'row', left: 'Ongkir', right: fmt(order.shipping_fee) });
@@ -469,16 +473,31 @@ export function OrderDetail() {
             {items.map((item) => (
               <div key={item.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
                 <div className="flex gap-4 items-center">
-                  <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 font-bold">
+                  <div className={clsx(
+                    "w-10 h-10 rounded-lg flex items-center justify-center font-bold",
+                    item.price === 0 ? "bg-emerald-100 text-emerald-600" : "bg-orange-100 text-orange-600"
+                  )}>
                     {item.quantity}x
                   </div>
                   <div>
-                    <p className="font-bold text-slate-900">{item.product_name}</p>
-                    <p className="text-slate-500 text-sm">Rp {item.price.toLocaleString('id-ID')}</p>
+                    <p className="font-bold text-slate-900 flex items-center gap-2">
+                      <span>{item.product_name}</span>
+                      {item.price === 0 && (
+                        <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
+                          Bonus
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-slate-500 text-sm">
+                      {item.price === 0 ? 'Hadiah Promo' : `Rp ${item.price.toLocaleString('id-ID')}`}
+                    </p>
                   </div>
                 </div>
-                <p className="font-bold text-slate-900 text-right">
-                  Rp {(item.price * item.quantity).toLocaleString('id-ID')}
+                <p className={clsx(
+                  "font-bold text-right",
+                  item.price === 0 ? "text-emerald-600 font-black text-xs uppercase" : "text-slate-900"
+                )}>
+                  {item.price === 0 ? 'Gratis' : `Rp ${(item.price * item.quantity).toLocaleString('id-ID')}`}
                 </p>
               </div>
             ))}
@@ -568,8 +587,8 @@ export function OrderDetail() {
             )}
             {order.voucher_code && (
               <div className="flex items-center justify-between text-emerald-600 font-bold">
-                <p>Diskon Voucher ({order.voucher_code})</p>
-                <p>- Rp {(order.discount_amount || 0).toLocaleString('id-ID')}</p>
+                <p>{(order.discount_amount || 0) > 0 ? `Diskon Voucher (${order.voucher_code})` : `Voucher Digunakan (${order.voucher_code})`}</p>
+                <p>{(order.discount_amount || 0) > 0 ? `- Rp ${(order.discount_amount).toLocaleString('id-ID')}` : 'Gratis Item (Bonus)'}</p>
               </div>
             )}
             {order.shipping_fee > 0 && (

@@ -1,7 +1,7 @@
 import { a as useCartStore, i as useAuthStore, r as haversineDistance, t as cn } from "./utils-CTF0MknL.js";
 import { useNavigate } from "react-router-dom";
 import React, { useEffect, useRef, useState } from "react";
-import { Calendar, CheckCircle2, Clock, MapPin, Navigation, Phone, Send, Store, Truck, User, X } from "lucide-react";
+import { Calendar, CheckCircle2, Clock, Gift, MapPin, Navigation, Phone, Send, Store, Truck, User, X } from "lucide-react";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { MapContainer, Marker, TileLayer, useMapEvents } from "react-leaflet";
@@ -103,7 +103,8 @@ var OrderForm = ({ onSuccess }) => {
 	}, [mapPosition, formData.order_type]);
 	const deliveryCost = deliveryDistance !== null ? Math.max(1e3, Math.round(deliveryDistance * 1e3)) : 0;
 	const isDistanceTooFar = deliveryDistance !== null && deliveryDistance > 10;
-	const totalWithDelivery = Math.max(0, getTotal() - (appliedVoucher?.amount || 0) + deliveryCost);
+	const voucherDiscount = appliedVoucher?.type === "free_item" || appliedVoucher?.reward_item_name ? 0 : appliedVoucher?.amount || 0;
+	const totalWithDelivery = Math.max(0, getTotal() - voucherDiscount + deliveryCost);
 	const handleApplyVoucher = async () => {
 		if (!voucherInput.trim()) return;
 		setValidatingVoucher(true);
@@ -452,21 +453,27 @@ var OrderForm = ({ onSuccess }) => {
 					}) : /* @__PURE__ */ jsxs("div", {
 						className: "flex items-center justify-between bg-emerald-50 border border-emerald-100 px-4 py-3 rounded-xl",
 						children: [/* @__PURE__ */ jsxs("div", {
-							className: "flex items-center gap-2",
-							children: [/* @__PURE__ */ jsx(CheckCircle2, {
-								className: "text-emerald-500",
-								size: 18
+							className: "flex items-center gap-2.5",
+							children: [appliedVoucher.type === "free_item" || appliedVoucher.reward_item_name ? /* @__PURE__ */ jsx(Gift, {
+								className: "text-emerald-600 shrink-0",
+								size: 20
+							}) : /* @__PURE__ */ jsx(CheckCircle2, {
+								className: "text-emerald-500 shrink-0",
+								size: 20
 							}), /* @__PURE__ */ jsxs("div", { children: [/* @__PURE__ */ jsx("p", {
-								className: "text-sm font-bold text-emerald-700",
+								className: "text-sm font-bold text-emerald-800",
 								children: appliedVoucher.code
-							}), /* @__PURE__ */ jsxs("p", {
+							}), appliedVoucher.type === "free_item" || appliedVoucher.reward_item_name ? /* @__PURE__ */ jsxs("p", {
+								className: "text-xs text-emerald-700 font-medium",
+								children: ["🎁 Gratis: ", appliedVoucher.reward_item_name]
+							}) : /* @__PURE__ */ jsxs("p", {
 								className: "text-xs text-emerald-600",
-								children: ["Diskon Rp ", appliedVoucher.amount.toLocaleString("id-ID")]
+								children: ["Diskon Rp ", (appliedVoucher.amount || 0).toLocaleString("id-ID")]
 							})] })]
 						}), /* @__PURE__ */ jsx("button", {
 							type: "button",
 							onClick: handleRemoveVoucher,
-							className: "text-rose-500 hover:text-rose-600 text-sm font-bold",
+							className: "text-rose-500 hover:text-rose-600 text-sm font-bold cursor-pointer",
 							children: "Batal"
 						})]
 					}),
@@ -483,7 +490,20 @@ var OrderForm = ({ onSuccess }) => {
 						className: "flex justify-between items-center text-slate-600 text-sm border-b border-lime-100/50 pb-2",
 						children: [/* @__PURE__ */ jsx("span", { children: "Subtotal" }), /* @__PURE__ */ jsxs("span", { children: ["Rp ", getTotal().toLocaleString("id-ID")] })]
 					}),
-					appliedVoucher && /* @__PURE__ */ jsxs("div", {
+					appliedVoucher && (appliedVoucher.type === "free_item" || appliedVoucher.reward_item_name) && /* @__PURE__ */ jsxs("div", {
+						className: "flex justify-between items-center text-emerald-700 text-sm border-b border-lime-100/50 pb-2 font-medium",
+						children: [/* @__PURE__ */ jsxs("span", {
+							className: "flex items-center gap-1.5",
+							children: [/* @__PURE__ */ jsx(Gift, {
+								size: 14,
+								className: "text-emerald-600"
+							}), /* @__PURE__ */ jsxs("span", { children: ["Bonus: ", appliedVoucher.reward_item_name] })]
+						}), /* @__PURE__ */ jsx("span", {
+							className: "text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full",
+							children: "Gratis (Rp 0)"
+						})]
+					}),
+					appliedVoucher && appliedVoucher.type !== "free_item" && (appliedVoucher.amount || 0) > 0 && /* @__PURE__ */ jsxs("div", {
 						className: "flex justify-between items-center text-emerald-600 text-sm border-b border-lime-100/50 pb-2",
 						children: [/* @__PURE__ */ jsx("span", { children: "Diskon Voucher" }), /* @__PURE__ */ jsxs("span", { children: ["- Rp ", appliedVoucher.amount.toLocaleString("id-ID")] })]
 					}),
